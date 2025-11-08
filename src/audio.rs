@@ -10,11 +10,11 @@ pub fn path_to_vector(instrument_path: &str) -> Vec<f32> {
         Ok(result) => result,
     };
     let samples = reader.samples::<i16>();
-    let kick_samples: Vec<f32> = samples
+    let vector: Vec<f32> = samples
         .map(|result| result.unwrap()) /* unwrap result */
         .map(|i16_value| i16_value as f32 / i16::MAX as f32) /* convert to f32 */
         .collect();
-    kick_samples
+    vector
 }
 
 pub fn init() -> (Stream, Arc<Mutex<AudioState>>) {
@@ -49,19 +49,33 @@ pub fn init() -> (Stream, Arc<Mutex<AudioState>>) {
 }
 fn play_instrument(data: &mut [f32], state: &Arc<Mutex<AudioState>>) {
     let mut state = state.lock().unwrap();
-    let channels = 2; // or get from config
+    let channels = 2;
 
     for frame in data.chunks_mut(channels) {
-        // Check metronome timing
         if state.is_playing {
-            if state.is_metronome {
-                if state.metronome_counter >= state.samples_per_beat {
+            // Calculate current step (0-15)
+            let step = (state.metronome_counter / state.samples_per_beat) as usize % 16;
+
+            // Check if we've entered a new step
+            if step != state.current_step {
+                state.current_step = step;
+
+                // Trigger instruments based on pattern
+                for i in 0..state.instruments.len() {
+                    if i != 2 && state.pattern[i][step] {  // Skip metronome instrument
+                        state.instruments[i].is_playing = true;
+                        state.instruments[i].position = 0;
+                    }
+                }
+
+                // Trigger metronome click on every beat if enabled
+                if state.is_metronome {
                     state.instruments[2].is_playing = true;
                     state.instruments[2].position = 0;
-                    state.metronome_counter -= state.samples_per_beat;
                 }
-                state.metronome_counter += 1.0;
             }
+
+            state.metronome_counter += 1.0;
         }
 
         // Mix all instruments

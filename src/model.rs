@@ -28,7 +28,6 @@ pub struct MyApp {
     pub audio_state: Arc<Mutex<AudioState>>,
     pub is_channel_rack_open: bool,
     pub is_settings_open: bool,
-    pub user_files: String,
     pub config: AppConfig,
 }
 
@@ -39,8 +38,7 @@ impl Default for MyApp {
             _audio_stream,
             audio_state,
             is_channel_rack_open: false,
-            is_settings_open: true,
-            user_files: "instruments/Boss Dr-660".parse().unwrap(),
+            is_settings_open: false,
             config: AppConfig::load(),
         }
     }
