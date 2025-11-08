@@ -1,30 +1,8 @@
-use crate::model::{AudioState, Instrument};
+use crate::model::{AudioState};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{SampleFormat, Stream};
 use hound;
 use std::sync::{Arc, Mutex};
-
-impl Default for AudioState {
-    fn default() -> Self {
-        let mut instruments = Vec::new();
-
-        instruments.push(Instrument {
-            samples: path_to_vector("instruments/cowbell.wav"),
-            position: 0,
-            is_playing: false,
-        });
-
-        instruments.push(Instrument {
-            samples: path_to_vector("instruments/Boss DR-660/Clap/Clap Dance.wav"),
-            position: 0,
-            is_playing: false,
-        });
-
-        Self {
-            instruments
-        }
-    }
-}
 
 pub fn path_to_vector(instrument_path: &str) -> Vec<f32> {
      let mut reader = match hound::WavReader::open(instrument_path) {
@@ -37,16 +15,6 @@ pub fn path_to_vector(instrument_path: &str) -> Vec<f32> {
         .map(|i16_value| i16_value as f32 / i16::MAX as f32) /* convert to f32 */
         .collect();
     kick_samples
-}
-
-pub fn add_to_instruments(samples: Vec<f32>, mut instruments: Vec<Instrument>) -> Vec<Instrument> {
-    let new_instrument = Instrument {
-        is_playing: false,
-        samples,
-        position: 0,
-    };
-    instruments.push(new_instrument);
-    instruments
 }
 
 pub fn init() -> (Stream, Arc<Mutex<AudioState>>) {

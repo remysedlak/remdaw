@@ -1,17 +1,5 @@
-use crate::audio;
-use crate::audio::{add_to_instruments, path_to_vector};
+use crate::audio::{path_to_vector};
 use crate::model::{Instrument, MyApp};
-
-impl Default for MyApp {
-    fn default() -> Self {
-        let (audio_stream, audio_state) = audio::init();
-        Self {
-            audio_stream,
-            audio_state,
-            is_channel_rack_open: true,
-        }
-    }
-}
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
