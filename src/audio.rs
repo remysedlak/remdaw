@@ -5,7 +5,7 @@ use hound;
 use std::sync::{Arc, Mutex};
 
 pub fn path_to_vector(instrument_path: &str) -> Vec<f32> {
-     let mut reader = match hound::WavReader::open(instrument_path) {
+    let mut reader = match hound::WavReader::open(instrument_path) {
         Err(err) => panic!("{}", err),
         Ok(result) => result,
     };
@@ -18,7 +18,6 @@ pub fn path_to_vector(instrument_path: &str) -> Vec<f32> {
 }
 
 pub fn init() -> (Stream, Arc<Mutex<AudioState>>) {
-
     let host = cpal::default_host();
     let device = host
         .default_output_device()
@@ -43,35 +42,35 @@ pub fn init() -> (Stream, Arc<Mutex<AudioState>>) {
         ),
         _ => panic!("Unsupported format"),
     }
-    .unwrap();
+        .unwrap();
     stream.play().unwrap();
     (stream, audio_state)
 }
+
 fn play_instrument(data: &mut [f32], state: &Arc<Mutex<AudioState>>) {
     let mut state = state.lock().unwrap();
     let channels = 2;
 
     for frame in data.chunks_mut(channels) {
         if state.is_playing {
-            // Calculate current step (0-15)
-            let step = (state.metronome_counter / state.samples_per_beat) as usize % 16;
+            // 16th note resolution: divide samples_per_beat by 4
+            let step = (state.metronome_counter / (state.samples_per_beat / 4.0)) as usize % 16;
 
-            // Check if we've entered a new step
             if step != state.current_step {
                 state.current_step = step;
 
                 // Trigger instruments based on pattern
                 for i in 0..state.instruments.len() {
-                    if i != 2 && state.pattern[i][step] {  // Skip metronome instrument
+                    if state.pattern[i][step] {
                         state.instruments[i].is_playing = true;
                         state.instruments[i].position = 0;
                     }
                 }
 
-                // Trigger metronome click on every beat if enabled
-                if state.is_metronome {
-                    state.instruments[2].is_playing = true;
-                    state.instruments[2].position = 0;
+                // Trigger metronome only every 4 steps (on the beat)
+                if state.is_metronome && step % 4 == 0 {
+                    state.metronome_playing = true;
+                    state.metronome_position = 0;
                 }
             }
 
@@ -80,6 +79,8 @@ fn play_instrument(data: &mut [f32], state: &Arc<Mutex<AudioState>>) {
 
         // Mix all instruments
         let mut mix = 0.0;
+
+        // Mix channel rack instruments
         for instrument in &mut state.instruments {
             if instrument.is_playing {
                 if instrument.position < instrument.samples.len() {
@@ -91,7 +92,29 @@ fn play_instrument(data: &mut [f32], state: &Arc<Mutex<AudioState>>) {
             }
         }
 
-        // Write to both channels
+        // Mix metronome separately
+        if state.metronome_playing {
+            if state.metronome_position < state.metronome_sample.len() {
+                mix += state.metronome_sample[state.metronome_position];
+                state.metronome_position += 1;
+            } else {
+                state.metronome_playing = false;
+            }
+        }
+
+        // Mix preview sound separately
+        if let Some(ref mut preview) = state.preview_sound {
+            if preview.is_playing {
+                if preview.position < preview.samples.len() {
+                    mix += preview.samples[preview.position];
+                    preview.position += 1;
+                } else {
+                    preview.is_playing = false;
+                    state.preview_sound = None;  // Clear after playing
+                }
+            }
+        }
+
         for sample in frame.iter_mut() {
             *sample = mix;
         }

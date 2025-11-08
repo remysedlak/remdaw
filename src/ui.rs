@@ -1,5 +1,5 @@
 use crate::model::{MyApp};
-use crate::components::{channel_rack, file_explorer, settings, toolbar};
+use crate::components::{channel_rack, file_explorer, file_information, settings, toolbar};
 use crate::config::AppConfig;
 
 impl eframe::App for MyApp {
@@ -32,6 +32,13 @@ impl eframe::App for MyApp {
 
         if self.is_settings_open {
             settings::render(self, ctx);
+        }
+
+        if self.is_file_info_open {
+            let file_path = self.selected_file.clone();
+            if let Some(ref path) = file_path {
+                file_information::render(self, ctx, path);
+            }
         }
 
         toolbar::render(self, ctx);

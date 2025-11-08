@@ -1,3 +1,4 @@
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use cpal::{Stream};
 use crate::audio;
@@ -20,6 +21,7 @@ pub struct Instrument {
     pub position: usize,  // where we are in the sample
     pub samples: Vec<f32>, // the actual WAV data
     pub name: String,
+    pub file_path: PathBuf,
 }
 
 // app config
@@ -28,6 +30,8 @@ pub struct MyApp {
     pub audio_state: Arc<Mutex<AudioState>>,
     pub is_channel_rack_open: bool,
     pub is_settings_open: bool,
+    pub is_file_info_open: bool,
+    pub selected_file: Option<PathBuf>,
     pub config: AppConfig,
 }
 
@@ -40,6 +44,8 @@ impl Default for MyApp {
             is_channel_rack_open: false,
             is_settings_open: false,
             config: AppConfig::load(),
+            is_file_info_open: false,
+            selected_file: None,
         }
     }
 }
@@ -55,37 +61,36 @@ pub struct AudioState {
     pub is_metronome: bool,
     pub pattern: Vec<Vec<bool>>,
     pub current_step: usize,
+    pub metronome_sample: Vec<f32>,  // Just the audio data
+    pub metronome_position: usize,
+    pub metronome_playing: bool,
+    pub preview_sound: Option<Instrument>,
 }
 
 impl AudioState {
     pub fn new(sampling_rate: f32) -> Self {
         let mut instruments = Vec::new();
+        let paths = ["instruments/cowbell.wav", "instruments/Boss DR-660/Clap/Clap Dance.wav", "instruments/Boss DR-660/Rim/St 808.wav"];
+        for path in paths.iter() {
 
-        instruments.push(Instrument {
-            samples: path_to_vector("instruments/cowbell.wav"),
-            position: 0,
-            is_playing: false,
-            name: "cowbell.wav".to_string(),
-        });
+            instruments.push(Instrument {
+                file_path: path.parse().unwrap(),
+                samples: path_to_vector(path),
+                position: 0,
+                is_playing: false,
+                name: Path::new(path).file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or("Unknown").parse().unwrap()
+            })
+        }
 
-        instruments.push(Instrument {
-            samples: path_to_vector("instruments/Boss DR-660/Clap/Clap Dance.wav"),
-            position: 0,
-            is_playing: false,
-            name: "Clap Dance.wav".to_string(),
-        });
-
-        instruments.push(Instrument {
-            samples: path_to_vector("instruments/Boss DR-660/Rim/St 808.wav"),
-            position: 0,
-            is_playing: false,
-            name: "St 808.wav".to_string(),
-        });
         let samples_per_beat =  sampling_rate * 60.0 / 130.0 ;
 
         // Initialize pattern: one row per instrument, 16 steps each
         let num_instruments = instruments.len();
         let pattern = vec![vec![false; 16]; num_instruments];
+
+        let metronome_sample = path_to_vector("instruments/Boss DR-660/Rim/St 808.wav");
 
         AudioState {
             instruments,
@@ -96,7 +101,11 @@ impl AudioState {
             is_playing: false,
             is_metronome: false,
             pattern,
-            current_step: 0
+            current_step: 0,
+            metronome_sample,
+            metronome_playing: false,
+            metronome_position: 0,
+            preview_sound: None,
         }
     }
 }
