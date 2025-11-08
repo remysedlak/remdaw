@@ -18,8 +18,6 @@ pub fn path_to_vector(instrument_path: &str) -> Vec<f32> {
 }
 
 pub fn init() -> (Stream, Arc<Mutex<AudioState>>) {
-    let audio_state = Arc::new(Mutex::new(AudioState::default()));
-    let audio_state_clone = audio_state.clone();
 
     let host = cpal::default_host();
     let device = host
@@ -30,6 +28,10 @@ pub fn init() -> (Stream, Arc<Mutex<AudioState>>) {
         .expect("error getting default config");
     let config = supported_config.config();
     let sample_format = supported_config.sample_format();
+    let sample_rate = config.sample_rate.0 as f32;
+
+    let audio_state = Arc::new(Mutex::new(AudioState::new(sample_rate)));
+    let audio_state_clone = audio_state.clone();
 
     let err_fn = |err| eprintln!("error: {}", err);
     let stream = match sample_format {
@@ -45,23 +47,35 @@ pub fn init() -> (Stream, Arc<Mutex<AudioState>>) {
     stream.play().unwrap();
     (stream, audio_state)
 }
-
 fn play_instrument(data: &mut [f32], state: &Arc<Mutex<AudioState>>) {
-    let mut state = state.lock().unwrap(); // lock ONCE
+    let mut state = state.lock().unwrap();
+    let channels = 2; // or get from config
 
-    for sample in data.iter_mut() {
-        let mut mix = 0.0; // accumulator ― multiple tracks is simply addition
+    for frame in data.chunks_mut(channels) {
+        // Check metronome timing
+        if state.metronome_counter >= state.samples_per_beat {
+            state.instruments[2].is_playing = true;
+            state.instruments[2].position = 0;
+            state.metronome_counter -= state.samples_per_beat;
+        }
+        state.metronome_counter += 1.0;
 
+        // Mix all instruments
+        let mut mix = 0.0;
         for instrument in &mut state.instruments {
             if instrument.is_playing {
                 if instrument.position < instrument.samples.len() {
-                    mix += instrument.samples[instrument.position]; // ADD to mix
+                    mix += instrument.samples[instrument.position];
                     instrument.position += 1;
                 } else {
                     instrument.is_playing = false;
                 }
             }
         }
-        *sample = mix; // output the accumulated mix
+
+        // Write to both channels
+        for sample in frame.iter_mut() {
+            *sample = mix;
+        }
     }
 }

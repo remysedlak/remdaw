@@ -32,12 +32,18 @@ impl eframe::App for MyApp {
 
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             ui.horizontal(|ui| {
+                let (bpm,sample_rate, samples_per_beat) = {
+                    let state = self.audio_state.lock().unwrap();
+                    (state.bpm, state.sampling_rate, state.samples_per_beat)
+                };
                 if ui.button("Top Panel").clicked(){
                     self.is_channel_rack_open = !self.is_channel_rack_open;
                 }
+                ui.label(format!("BPM: {}",bpm.to_string()));
+                ui.label(format!("Sampling Rate: {}",sample_rate.to_string()));
+                ui.label(format!("Samples per beat: {}",samples_per_beat.to_string()));
             })
         });
-
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("My egui Application");
 

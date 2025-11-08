@@ -1,5 +1,6 @@
 use std::sync::{Arc, Mutex};
-use cpal::Stream;
+use cpal::{SampleRate, Stream};
+use egui::SafeAreaInsets;
 use crate::audio;
 use crate::audio::path_to_vector;
 
@@ -27,10 +28,14 @@ impl Default for MyApp {
 
 pub struct AudioState {
     pub instruments: Vec<Instrument>,
+    pub bpm: i16,
+    pub sampling_rate: f32,
+    pub samples_per_beat: f32,
+    pub metronome_counter: f32,
 }
 
-impl Default for AudioState {
-    fn default() -> Self {
+impl AudioState {
+    pub fn new(sampling_rate: f32) -> Self {
         let mut instruments = Vec::new();
 
         instruments.push(Instrument {
@@ -45,8 +50,18 @@ impl Default for AudioState {
             is_playing: false,
         });
 
-        Self {
-            instruments
+        instruments.push(Instrument {
+            samples: path_to_vector("instruments/Boss DR-660/Rim/St 808.wav"),
+            position: 0,
+            is_playing: false,
+        });
+        let samples_per_beat =  sampling_rate * 60.0 / 130.0 ;
+        AudioState {
+            instruments,
+            bpm: 130,
+            sampling_rate,
+            samples_per_beat,
+            metronome_counter: 0.0,
         }
     }
 }
