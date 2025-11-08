@@ -1,5 +1,7 @@
 use crate::audio::{path_to_vector};
+use crate::components;
 use crate::model::{Instrument, MyApp};
+use crate::components::{toolbar};
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
@@ -30,20 +32,8 @@ impl eframe::App for MyApp {
             }
         });
 
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                let (bpm,sample_rate, samples_per_beat) = {
-                    let state = self.audio_state.lock().unwrap();
-                    (state.bpm, state.sampling_rate, state.samples_per_beat)
-                };
-                if ui.button("Top Panel").clicked(){
-                    self.is_channel_rack_open = !self.is_channel_rack_open;
-                }
-                ui.label(format!("BPM: {}",bpm.to_string()));
-                ui.label(format!("Sampling Rate: {}",sample_rate.to_string()));
-                ui.label(format!("Samples per beat: {}",samples_per_beat.to_string()));
-            })
-        });
+        toolbar::render(self, ctx);
+
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("My egui Application");
 

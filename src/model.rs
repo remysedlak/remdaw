@@ -1,6 +1,5 @@
 use std::sync::{Arc, Mutex};
-use cpal::{SampleRate, Stream};
-use egui::SafeAreaInsets;
+use cpal::{Stream};
 use crate::audio;
 use crate::audio::path_to_vector;
 
@@ -32,6 +31,8 @@ pub struct AudioState {
     pub sampling_rate: f32,
     pub samples_per_beat: f32,
     pub metronome_counter: f32,
+    pub is_playing: bool,
+    pub is_metronome: bool,
 }
 
 impl AudioState {
@@ -62,6 +63,8 @@ impl AudioState {
             sampling_rate,
             samples_per_beat,
             metronome_counter: 0.0,
+            is_playing: false,
+            is_metronome: false,
         }
     }
 }

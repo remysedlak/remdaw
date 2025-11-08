@@ -1,6 +1,8 @@
 mod ui;
 mod audio;
 mod model;
+mod components;
+
 use model::MyApp;
 use eframe::egui;
 

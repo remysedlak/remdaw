@@ -53,12 +53,16 @@ fn play_instrument(data: &mut [f32], state: &Arc<Mutex<AudioState>>) {
 
     for frame in data.chunks_mut(channels) {
         // Check metronome timing
-        if state.metronome_counter >= state.samples_per_beat {
-            state.instruments[2].is_playing = true;
-            state.instruments[2].position = 0;
-            state.metronome_counter -= state.samples_per_beat;
+        if state.is_playing {
+            if state.is_metronome {
+                if state.metronome_counter >= state.samples_per_beat {
+                    state.instruments[2].is_playing = true;
+                    state.instruments[2].position = 0;
+                    state.metronome_counter -= state.samples_per_beat;
+                }
+                state.metronome_counter += 1.0;
+            }
         }
-        state.metronome_counter += 1.0;
 
         // Mix all instruments
         let mut mix = 0.0;
