@@ -1,7 +1,7 @@
 mod ui;
 mod audio;
-
-use ui::MyApp;
+mod model;
+use model::MyApp;
 use eframe::egui;
 
 fn main() -> eframe::Result {
@@ -11,7 +11,7 @@ fn main() -> eframe::Result {
         ..Default::default()
     };
     eframe::run_native(
-        "My DAW",
+        "Remy Daw",
         options,
         Box::new(|cc| {
             // This gives us image support:

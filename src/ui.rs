@@ -1,23 +1,14 @@
-use std::sync::{Arc, Mutex};
-use cpal::Stream;
 use crate::audio;
-use crate::audio::AudioState;
-
-pub struct MyApp {
-    name: String,
-    age: u32,
-    audio_stream: Stream,
-    audio_state: Arc<Mutex<AudioState>>
-}
+use crate::audio::{add_to_instruments, path_to_vector};
+use crate::model::{Instrument, MyApp};
 
 impl Default for MyApp {
     fn default() -> Self {
         let (audio_stream, audio_state) = audio::init();
         Self {
-            name: "Arthur".to_owned(),
-            age: 42,
             audio_stream,
-            audio_state
+            audio_state,
+            is_channel_rack_open: true,
         }
     }
 }
@@ -27,24 +18,50 @@ impl eframe::App for MyApp {
 
         ctx.input_mut(|i| {
             if i.consume_key(egui::Modifiers::NONE, egui::Key::T) {
-                let mut state = self.audio_state.lock().unwrap(); // lock only here
-                state.kick_playing = true;
-                state.kick_position = 0;
-            } // unlock immediately
+                let mut state = self.audio_state.lock().unwrap();
+                // Trigger the first instrument (index 0)
+                state.instruments[0].position = 0;
+                state.instruments[0].is_playing = true;
+            }
+            if i.consume_key(egui::Modifiers::NONE, egui::Key::Y) {
+                let mut state = self.audio_state.lock().unwrap();
+                // Trigger the first instrument (index 0)
+                state.instruments[1].position = 0;
+                state.instruments[1].is_playing = true;
+            }
+            if i.consume_key(egui::Modifiers::NONE, egui::Key::U) {
+                let mut state = self.audio_state.lock().unwrap();
+                let vector = path_to_vector("instruments/Boss DR-660/Clap/Clap Dance.wav");
+                state.instruments.push(Instrument {is_playing: false, position: 0, samples: vector });
+            }
+            if i.consume_key(egui::Modifiers::NONE, egui::Key::I) {
+                let mut state = self.audio_state.lock().unwrap();
+                // Trigger the first instrument (index 0)
+                state.instruments[2].position = 0;
+                state.instruments[2].is_playing = true;
+            }
+        });
+
+        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
+            ui.horizontal(|ui| {
+                if ui.button("Top Panel").clicked(){
+                    self.is_channel_rack_open = !self.is_channel_rack_open;
+                }
+            })
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("My egui Application");
+
             ui.horizontal(|ui| {
-                let name_label = ui.label("Your name: ");
-                ui.text_edit_singleline(&mut self.name)
-                    .labelled_by(name_label.id);
+                ui.label("this is a label")
             });
-            ui.add(egui::Slider::new(&mut self.age, 0..=120).text("age"));
-            if ui.button("Increment").clicked() {
-                self.age += 1;
-            }
-            ui.label(format!("Hello '{}', age {}", self.name, self.age));
+
+              if self.is_channel_rack_open {
+                  egui::Window::new("My Window").show(ctx, |ui| {
+                      ui.label("Hello World!");
+                  });
+              }
         });
     }
 }
