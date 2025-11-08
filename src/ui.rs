@@ -33,6 +33,11 @@ impl eframe::App for MyApp {
 
         toolbar::render(self, ctx);
 
+        egui::SidePanel::left("files").show(ctx, |ui| {
+            ui.label("File Section.")
+
+        });
+
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("My egui Application");
 
@@ -43,6 +48,27 @@ impl eframe::App for MyApp {
               if self.is_channel_rack_open {
                   egui::Window::new("My Window").show(ctx, |ui| {
                       ui.label("Hello World!");
+
+                      let (response, painter) = ui.allocate_painter(
+                          egui::Vec2::new(ui.available_width(), 200.0),
+                          egui::Sense::click_and_drag()
+                      );
+
+                      // Draw a clip as a rectangle
+                      let clip_rect = egui::Rect::from_min_size(
+                          egui::Pos2::new(100.0, 50.0),  // position
+                          egui::Vec2::new(200.0, 80.0)   // size
+                      );
+                      painter.rect_filled(clip_rect, 5.0, egui::Color32::BLUE);
+
+                      // Check if this "clip" was clicked
+                      if response.clicked() {
+                          if let Some(pos) = response.interact_pointer_pos() {
+                              if clip_rect.contains(pos) {
+                                  println!("Clicked the clip!");
+                              }
+                          }
+                      }
                   });
               }
         });

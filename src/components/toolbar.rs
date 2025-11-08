@@ -6,9 +6,6 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                 let state = app.audio_state.lock().unwrap();
                 (state.bpm, state.sampling_rate, state.samples_per_beat)
             };
-            if ui.button("Top Panel").clicked(){
-                app.is_channel_rack_open = !app.is_channel_rack_open;
-            }
             ui.label(format!("BPM: {}",bpm.to_string()));
             ui.label(format!("Sampling Rate: {}",sample_rate.to_string()));
             ui.label(format!("Samples per beat: {}",samples_per_beat.to_string()));
@@ -26,6 +23,9 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
             if ui.button("metro").clicked(){
                 let mut state = app.audio_state.lock().unwrap();
                 state.is_metronome = !state.is_metronome;
+            }
+            if ui.button("rack").clicked(){
+                app.is_channel_rack_open = !app.is_channel_rack_open;
             }
         })
     });

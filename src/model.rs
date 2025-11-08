@@ -3,11 +3,24 @@ use cpal::{Stream};
 use crate::audio;
 use crate::audio::path_to_vector;
 
+// small pieces of audio within a track that can be moved around
+pub struct Clip {
+    pub samples: Vec<f32>,
+}
+
+// one track = one horizontal line of music in a DAW , usually holds one pattern or one file
+pub struct Track {
+    pub clips: Vec<Clip>,
+}
+
+// loaded sounds
 pub struct Instrument {
     pub is_playing: bool,
     pub position: usize,  // where we are in the sample
     pub samples: Vec<f32>, // the actual WAV data
 }
+
+// app config
 pub struct MyApp {
     pub _audio_stream: Stream,
     pub audio_state: Arc<Mutex<AudioState>>,
@@ -25,6 +38,7 @@ impl Default for MyApp {
     }
 }
 
+// shared state between gui and cpal
 pub struct AudioState {
     pub instruments: Vec<Instrument>,
     pub bpm: i16,

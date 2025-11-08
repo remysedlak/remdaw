@@ -13,7 +13,7 @@ fn main() -> eframe::Result {
         ..Default::default()
     };
     eframe::run_native(
-        "Remy Daw",
+        "remdaw",
         options,
         Box::new(|cc| {
             // This gives us image support:
