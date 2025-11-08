@@ -9,16 +9,16 @@ pub struct Instrument {
     pub samples: Vec<f32>, // the actual WAV data
 }
 pub struct MyApp {
-    pub audio_stream: Stream,
+    pub _audio_stream: Stream,
     pub audio_state: Arc<Mutex<AudioState>>,
     pub is_channel_rack_open: bool,
 }
 
 impl Default for MyApp {
     fn default() -> Self {
-        let (audio_stream, audio_state) = audio::init();
+        let (_audio_stream, audio_state) = audio::init();
         Self {
-            audio_stream,
+            _audio_stream,
             audio_state,
             is_channel_rack_open: true,
         }
