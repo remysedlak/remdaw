@@ -17,7 +17,6 @@ pub fn path_to_vector(instrument_path: &str) -> Vec<f32> {
     kick_samples
 }
 
-
 pub fn init() -> (Stream, Arc<Mutex<AudioState>>) {
 
     let host = cpal::default_host();

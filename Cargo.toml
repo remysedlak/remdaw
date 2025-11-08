@@ -10,3 +10,7 @@ eframe = "0.33.0"
 egui = "0.33.0"
 egui_extras = "0.33.0"
 hound = "3.5.1"
+rfd = "0.15"
+serde = { version = "1.0.228", features = ["derive"] }
+dirs = "6.0.0"
+serde_json = "1.0.145"
