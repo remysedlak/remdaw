@@ -5,3 +5,4 @@ pub mod settings;
 pub mod file_information;
 pub mod patterns;
 pub mod playlist;
+pub mod popups;

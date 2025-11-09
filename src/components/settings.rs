@@ -6,7 +6,7 @@ pub(crate) fn render(app: &mut MyApp, ctx: &egui::Context) {
         .min_width(400.0)
         .resizable(false)
         .collapsible(false)
-        .open(&mut app.is_settings_open)
+        .open(&mut app.ui_state.is_settings_open)
         .show(&ctx, |ui| {
             ui.label(egui::RichText::new("Settings").strong().size(20.0));
             ui.separator();

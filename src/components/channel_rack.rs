@@ -3,7 +3,7 @@ use crate::models::MyApp;
 pub fn render(app: &mut MyApp, ctx: &egui::Context) {
     egui::Window::new("Channel Rack")
         .collapsible(false)
-        .open(&mut app.is_channel_rack_open)
+        .open(&mut app.ui_state.is_channel_rack_open)
         .show(ctx, |ui| {
             let mut state = app.audio_state.lock().unwrap();
             let mut clicked_instrument: Option<usize> = None;
@@ -57,7 +57,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                 let file_path = state.instruments[idx].file_path.clone();
                 drop(state);
                 app.selected_file = Some(file_path);
-                app.is_file_info_open = true;
+                app.ui_state.is_file_info_open = true;
             }
         });
 }

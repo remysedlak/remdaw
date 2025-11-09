@@ -3,7 +3,7 @@ use crate::models::{Instrument, MyApp};
 
 pub fn render(app: &mut MyApp, ctx: &egui::Context, file: &PathBuf) {
     egui::Window::new("File Information")
-        .open(&mut app.is_file_info_open)
+        .open(&mut app.ui_state.is_file_info_open)
         .show(ctx, |ui| {
             // Get filename
             let name = file.file_name()

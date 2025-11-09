@@ -36,6 +36,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
 
             if ui.button("stop").clicked() {
                 state.is_playing = false;
+                state.playhead_position = 0.0;
                 state.metronome_counter = 0.0;
             }
 
@@ -48,20 +49,20 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
             ui.add_space(24.0);
 
             if ui.button("rack").clicked() {
-                app.is_channel_rack_open = !app.is_channel_rack_open;
+                app.ui_state.is_channel_rack_open = !app.ui_state.is_channel_rack_open;
             }
 
             if ui.button("files").clicked() {
-                app.is_files_explorer_open = !app.is_files_explorer_open;
+                app.ui_state.is_files_explorer_open = !app.ui_state.is_files_explorer_open;
             }
 
             if ui.button("patterns").clicked() {
-                app.is_patterns_open = !app.is_patterns_open
+                app.ui_state.is_patterns_open = !app.ui_state.is_patterns_open
             }
 
             ui.with_layout(egui::Layout::right_to_left(Center), |ui| {
                 if ui.button("settings").clicked() {
-                    app.is_settings_open = !app.is_settings_open;
+                    app.ui_state.is_settings_open = !app.ui_state.is_settings_open;
                 }
             });
         });

@@ -1,4 +1,5 @@
 use eframe::emath;
+use crate::components::popups::rename_pattern;
 use crate::models::{MyApp, Pattern};
 
 pub fn render(app: &mut MyApp, ctx: &egui::Context) {
@@ -14,19 +15,77 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
             ui.separator();
 
             ui.vertical_centered(|ui| {
-                // Clone patterns for display only
                 let patterns = {
                     let state = app.audio_state.lock().unwrap();
                     state.patterns.clone()
                 };
 
-                for (idx, pattern) in patterns.iter().enumerate() {
-                    let button = egui::Button::new(format!("{}", pattern.name))
-                        .min_size(emath::vec2(100.0, 20.0));
+                for (idx, mut pattern) in patterns.iter().enumerate() {
+                    let (rect, response) = ui.allocate_exact_size(
+                        emath::vec2(100.0, 25.0),
+                        egui::Sense::click_and_drag()
+                    );
 
-                    if ui.add(button).clicked() {
+                    // Check if this pattern is being dragged
+                    let is_being_dragged = ctx.memory(|mem| {
+                        mem.data.get_temp::<usize>(egui::Id::new("dragging_pattern")) == Some(idx)
+                    });
+
+                    // Draw background
+                    let color = if is_being_dragged {
+                        egui::Color32::from_rgb(100, 150, 200) // Blue when dragging
+                    } else if response.hovered() {
+                        egui::Color32::from_gray(80)
+                    } else {
+                        egui::Color32::from_gray(60)
+                    };
+
+                    ui.painter().rect_filled(rect, 3.0, color);
+
+                    // Draw text
+                    ui.painter().text(
+                        rect.center(),
+                        egui::Align2::CENTER_CENTER,
+                        &pattern.name,
+                        egui::FontId::default(),
+                        egui::Color32::WHITE
+                    );
+
+                    // Handle drag
+                    if response.drag_started() {
+                        println!("Started dragging pattern {}", idx);
+                        ctx.memory_mut(|mem| {
+                            mem.data.insert_temp(egui::Id::new("dragging_pattern"), idx);
+                        });
+                    }
+
+                    if response.dragged() {
+                        println!("Dragging pattern {} - delta: {:?}", idx, response.drag_delta());
+                    }
+
+                    // Handle click to load
+                    if response.clicked() {
                         pattern_to_load = Some(idx);
                     }
+
+                    response.context_menu(|ui| {
+                        if ui.button("Delete").clicked() {
+                            // Handle delete
+                            ui.close();
+                        }
+                        if ui.button("Rename").clicked() {
+                            // Handle rename
+                            app.ui_state.pattern_rename_popup = Some(idx);
+                            app.ui_state.rename_buffer = pattern.name.clone();
+
+                            ui.close();
+                        }
+                        if ui.button("Duplicate").clicked() {
+                            // Handle duplicate
+                            ui.close();
+                        }
+                    });
+
                     ui.add_space(4.0);
                 }
 
@@ -38,16 +97,15 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
             });
         });
 
-    // Handle mutations OUTSIDE the show() closure
     if should_add_pattern || pattern_to_load.is_some() {
         let mut state = app.audio_state.lock().unwrap();
 
         if should_add_pattern {
             let num = state.patterns.len() + 1;
-            let pattern_data = state.pattern.clone(); // Clone FIRST
+            let pattern_data = state.pattern.clone();
             state.patterns.push(Pattern {
                 name: format!("Pattern {}", num),
-                data: pattern_data, // Use the clone
+                data: pattern_data,
             });
         }
 
@@ -56,5 +114,11 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                 state.pattern = pattern.data.clone();
             }
         }
+    }
+}
+
+pub fn rename_pattern(pattern: &mut Pattern, new_name: String) {
+    if new_name.len() > 0 {
+        pattern.name = new_name;
     }
 }

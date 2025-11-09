@@ -75,6 +75,9 @@ fn play_instrument(data: &mut [f32], state: &Arc<Mutex<AudioState>>) {
             }
 
             state.metronome_counter += 1.0;
+
+            // Update playhead position (in beats)
+            state.playhead_position = (state.metronome_counter / state.samples_per_beat) as f64;
         }
 
         // Mix all instruments
@@ -110,7 +113,7 @@ fn play_instrument(data: &mut [f32], state: &Arc<Mutex<AudioState>>) {
                     preview.position += 1;
                 } else {
                     preview.is_playing = false;
-                    state.preview_sound = None;  // Clear after playing
+                    state.preview_sound = None;
                 }
             }
         }

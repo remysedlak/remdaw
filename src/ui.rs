@@ -1,5 +1,6 @@
 use crate::models::{MyApp};
 use crate::components::{channel_rack, file_explorer, file_information, patterns, playlist, settings, toolbar};
+use crate::components::popups::rename_pattern;
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
@@ -26,39 +27,39 @@ impl eframe::App for MyApp {
             }
         });
 
-        // conditionally render channel rack and file information
-        if self.is_channel_rack_open {
+        // conditionally render popups
+        if self.ui_state.is_channel_rack_open {
             channel_rack::render(self, ctx);
         }
-        if self.is_file_info_open {
+        if self.ui_state.is_file_info_open {
             let file_path = self.selected_file.clone();
             if let Some(ref path) = file_path {
                 file_information::render(self, ctx, path);
             }
         }
 
+
+        // PATTERN rename window
+        if let Some(idx) = self.ui_state.pattern_rename_popup {
+            rename_pattern::render(self, ctx, idx);
+        }
+
         // render toolbar at top
         toolbar::render(self, ctx);
 
         // conditionally render side panels
-        if self.is_files_explorer_open {
+        if self.ui_state.is_files_explorer_open {
             file_explorer::render(self, ctx);
         }
-        if self.is_patterns_open {
+        if self.ui_state.is_patterns_open {
             patterns::render(self, ctx);
         }
-        if self.is_settings_open {
+        if self.ui_state.is_settings_open {
             settings::render(self, ctx);
         }
 
         // where the playlist will be modularized
-        egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Playlist");
-            ui.horizontal(|ui| {
-                ui.label("this is a label")
-            });
-            playlist::render(self, ctx);
-        });
+        playlist::render(self, ctx);
     }
 
     // runs on app close. save user config to storage

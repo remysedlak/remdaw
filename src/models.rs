@@ -33,19 +33,13 @@ impl Playlist {
                 },
                 Track {
                     name: "Track 2".to_string(),
-                    height: 60.0,
+                    height: 50.0,
                     muted: false,
                     solo: false,
                 },
                 Track {
                     name: "Track 3".to_string(),
-                    height: 60.0,
-                    muted: false,
-                    solo: false,
-                },
-                Track {
-                    name: "Track 4".to_string(),
-                    height: 60.0,
+                    height: 50.0,
                     muted: false,
                     solo: false,
                 },
@@ -85,27 +79,37 @@ pub struct Instrument {
 pub struct MyApp {
     pub _audio_stream: Stream,
     pub audio_state: Arc<Mutex<AudioState>>,
+    pub selected_file: Option<PathBuf>,
+    pub config: AppConfig,
+    pub ui_state: UiState,
+}
+
+pub struct UiState {
     pub is_channel_rack_open: bool,
     pub is_settings_open: bool,
     pub is_file_info_open: bool,
     pub is_files_explorer_open: bool,
+    pub pattern_rename_popup: Option<usize>, // Changed from bool to Option<usize>
+    pub rename_buffer: String, // Store the temporary name
+    pub is_pattern_delete: bool,
     pub is_patterns_open: bool,
-    pub selected_file: Option<PathBuf>,
-    pub config: AppConfig,
 }
 
 impl Default for MyApp {
     fn default() -> Self {
+        let ui_state = UiState {  is_channel_rack_open: false,
+            is_settings_open: false,
+            is_patterns_open: true,
+            pattern_rename_popup: None,
+            is_files_explorer_open: true,
+            is_file_info_open: false, rename_buffer: String::new(), is_pattern_delete: false };
+
         let (_audio_stream, audio_state) = audio::init();
         Self {
             _audio_stream,
             audio_state,
-            is_channel_rack_open: false,
-            is_settings_open: false,
-            is_patterns_open: true,
-            is_files_explorer_open: true,
+            ui_state,
             config: AppConfig::load(),
-            is_file_info_open: false,
             selected_file: None,
         }
     }
