@@ -19,8 +19,12 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                 state.samples_per_beat = state.sampling_rate * 60.0 / state.bpm as f32;
             }
 
-            ui.label(format!("Sampling Rate: {}", state.sampling_rate));
-            ui.label(format!("Samples per beat: {:.0}", state.samples_per_beat));
+            ui.add_space(24.0);
+
+            ui.label(format!("SR: {}", state.sampling_rate));
+            ui.label(format!("SPB: {:.0}", state.samples_per_beat));
+
+            ui.add_space(24.0);
 
             let label = if state.is_playing { "pause" } else { "play" };
             if ui.button(label).clicked() {

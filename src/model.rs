@@ -1,18 +1,67 @@
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use cpal::{Stream};
+use egui::Color32;
 use crate::audio;
 use crate::audio::path_to_vector;
 use crate::config::AppConfig;
 
-// small pieces of audio within a track that can be moved around
-pub struct Clip {
-    pub samples: Vec<f32>,
+pub struct Playlist {
+    tracks: Vec<Track>,
+    clips: Vec<PlacedClip>,
+    zoom_level: f32,
+    scroll_position: f32,
 }
 
-// one track = one horizontal line of music in a DAW , usually holds one pattern or one file
-pub struct Track {
-    pub clips: Vec<Clip>,
+impl Playlist {
+    pub fn new() -> Self {
+        Playlist {
+            tracks: vec![
+                Track {
+                    name: "Track 1".to_string(),
+                    height: 60.0,
+                    muted: false,
+                    solo: false,
+                },
+                Track {
+                    name: "Track 2".to_string(),
+                    height: 60.0,
+                    muted: false,
+                    solo: false,
+                },
+                Track {
+                    name: "Track 3".to_string(),
+                    height: 60.0,
+                    muted: false,
+                    solo: false,
+                },
+                Track {
+                    name: "Track 4".to_string(),
+                    height: 60.0,
+                    muted: false,
+                    solo: false,
+                },
+            ],
+            clips: Vec::new(),  // Empty - user will add clips
+            zoom_level: 1.0,
+            scroll_position: 0.0,
+        }
+    }
+}
+
+struct PlacedClip {
+    pattern_id: usize, // reference to your pattern/sample
+    track_index: usize,
+    start_time: f64, // in beats or samples
+    length: f64,
+    color: Color32,
+}
+
+struct Track {
+    name: String,
+    height: f32,
+    muted: bool,
+    solo: bool,
 }
 
 // loaded sounds
@@ -65,6 +114,9 @@ pub struct AudioState {
     pub metronome_position: usize,
     pub metronome_playing: bool,
     pub preview_sound: Option<Instrument>,
+
+    pub playlist: Playlist,
+    pub playhead_position: f64,
 }
 
 impl AudioState {
@@ -106,6 +158,8 @@ impl AudioState {
             metronome_playing: false,
             metronome_position: 0,
             preview_sound: None,
+            playlist: Playlist::new(),
+            playhead_position: 0.0,
         }
     }
 }

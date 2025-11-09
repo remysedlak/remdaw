@@ -1,5 +1,5 @@
 use crate::model::{MyApp};
-use crate::components::{channel_rack, file_explorer, file_information, settings, toolbar};
+use crate::components::{channel_rack, file_explorer, file_information, playlists, settings, toolbar};
 use crate::config::AppConfig;
 
 impl eframe::App for MyApp {
@@ -45,12 +45,15 @@ impl eframe::App for MyApp {
 
         file_explorer::render(self, ctx);
 
+        playlists::render(self, ctx);
+
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("My egui Application");
+            ui.heading("Playlist");
 
             ui.horizontal(|ui| {
                 ui.label("this is a label")
             });
+
 
 
         });
