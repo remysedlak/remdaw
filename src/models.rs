@@ -8,8 +8,8 @@ use crate::config::AppConfig;
 
 // Where all music positions are stored for playback and export
 pub struct Playlist {
-    tracks: Vec<Track>,
-    clips: Vec<PlacedClip>,
+    pub(crate) tracks: Vec<Track>,
+    pub(crate) clips: Vec<PlacedClip>,
     zoom_level: f32,
     scroll_position: f32,
 }
@@ -17,7 +17,8 @@ pub struct Playlist {
 // one group of patterns of drums from channel rack
 #[derive(Clone)]
 pub struct Pattern {
-    pub(crate) name: String,
+    pub name: String,
+    pub data: Vec<Vec<bool>>,  // The actual 16-step pattern for each instrument
 }
 
 impl Playlist {
@@ -56,17 +57,17 @@ impl Playlist {
     }
 }
 
-struct PlacedClip {
-    pattern_id: usize, // reference to your pattern/sample
-    track_index: usize,
-    start_time: f64, // in beats or samples
-    length: f64,
-    color: Color32,
+pub struct PlacedClip {
+    pub(crate) pattern_id: usize, // reference to your pattern/sample
+    pub(crate) track_index: usize,
+    pub(crate) start_time: f64, // in beats or samples
+    pub(crate) length: f64,
+    pub(crate) color: Color32,
 }
 
-struct Track {
-    name: String,
-    height: f32,
+pub struct Track {
+    pub(crate) name: String,
+    pub(crate) height: f32,
     muted: bool,
     solo: bool,
 }
@@ -157,7 +158,7 @@ impl AudioState {
 
         let metronome_sample = path_to_vector("test_instruments/St 808.wav");
         let mut patterns = Vec::new();
-        patterns.push(Pattern { name:"Pattern 1".to_string() } );
+        patterns.push(Pattern { name:"Pattern 1".to_string(), data: pattern.clone() } );
         AudioState {
             instruments,
             bpm: 130,

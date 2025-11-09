@@ -4,3 +4,4 @@ pub mod file_explorer;
 pub mod settings;
 pub mod file_information;
 pub mod patterns;
+pub mod playlist;

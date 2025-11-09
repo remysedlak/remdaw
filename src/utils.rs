@@ -1,5 +1,6 @@
 use eframe::epaint::text::FontDefinitions;
 
+// returns FontDefintions created from a ttf file
 pub fn prepare_fonts() -> FontDefinitions {
 
     let mut fonts = FontDefinitions::default();

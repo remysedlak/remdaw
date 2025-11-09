@@ -5,10 +5,6 @@ mod components;
 mod config;
 mod utils;
 
-use models::MyApp;
-use eframe::egui;
-use crate::utils::prepare_fonts;
-
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
     let options = eframe::NativeOptions {
@@ -16,13 +12,12 @@ fn main() -> eframe::Result {
         ..Default::default()
     };
     eframe::run_native(
-        "remdaw",
+        "remdaw", // app title
         options,
         Box::new(|cc| {
-            // This gives us image support:
-            cc.egui_ctx.set_fonts(prepare_fonts());
-            egui_extras::install_image_loaders(&cc.egui_ctx);
-            Ok(Box::<MyApp>::default())
+            cc.egui_ctx.set_fonts(utils::prepare_fonts()); // font support
+            egui_extras::install_image_loaders(&cc.egui_ctx); // image support
+            Ok(Box::<models::MyApp>::default())
         }),
     )
 }
