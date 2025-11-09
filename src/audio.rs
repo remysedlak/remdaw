@@ -1,4 +1,4 @@
-use crate::model::{AudioState};
+use crate::models::{AudioState};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{SampleFormat, Stream};
 use hound;

@@ -1,4 +1,4 @@
-use crate::model::MyApp;
+use crate::models::MyApp;
 
 
 pub(crate) fn render(app: &mut MyApp, ctx: &egui::Context) {

@@ -6,11 +6,18 @@ use crate::audio;
 use crate::audio::path_to_vector;
 use crate::config::AppConfig;
 
+// Where all music positions are stored for playback and export
 pub struct Playlist {
     tracks: Vec<Track>,
     clips: Vec<PlacedClip>,
     zoom_level: f32,
     scroll_position: f32,
+}
+
+// one group of patterns of drums from channel rack
+#[derive(Clone)]
+pub struct Pattern {
+    pub(crate) name: String,
 }
 
 impl Playlist {
@@ -121,12 +128,14 @@ pub struct AudioState {
 
     pub playlist: Playlist,
     pub playhead_position: f64,
+
+    pub patterns: Vec<Pattern>,
 }
 
 impl AudioState {
     pub fn new(sampling_rate: f32) -> Self {
         let mut instruments = Vec::new();
-        let paths = ["instruments/cowbell.wav", "instruments/Boss DR-660/Clap/Clap Dance.wav", "instruments/Boss DR-660/Rim/St 808.wav"];
+        let paths = ["test_instruments/cowbell.wav", "test_instruments/Clap Dance.wav", "test_instruments/St 808.wav"];
         for path in paths.iter() {
 
             instruments.push(Instrument {
@@ -146,8 +155,9 @@ impl AudioState {
         let num_instruments = instruments.len();
         let pattern = vec![vec![false; 16]; num_instruments];
 
-        let metronome_sample = path_to_vector("instruments/Boss DR-660/Rim/St 808.wav");
-
+        let metronome_sample = path_to_vector("test_instruments/St 808.wav");
+        let mut patterns = Vec::new();
+        patterns.push(Pattern { name:"Pattern 1".to_string() } );
         AudioState {
             instruments,
             bpm: 130,
@@ -164,6 +174,7 @@ impl AudioState {
             preview_sound: None,
             playlist: Playlist::new(),
             playhead_position: 0.0,
+            patterns
         }
     }
 }

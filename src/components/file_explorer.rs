@@ -1,12 +1,11 @@
 use std::fs;
 use std::path::{Path, PathBuf};
-use crate::model::MyApp;
+use crate::models::MyApp;
 
 pub fn render(app: &mut MyApp, ctx: &egui::Context) {
     egui::SidePanel::left("files")
         .resizable(true)
         .show(ctx, |ui| {
-            ui.add_space(10.0);
             ui.label(egui::RichText::new("Files").strong().size(20.0));
             ui.separator();
 
@@ -54,7 +53,7 @@ fn render_directory(ui: &mut egui::Ui, app: &mut MyApp, path: &Path, depth: usiz
                             let mut state = app.audio_state.lock().unwrap();
 
                             // Set as preview sound (replaces any existing preview)
-                            state.preview_sound = Some(crate::model::Instrument {
+                            state.preview_sound = Some(crate::models::Instrument {
                                 name: name.clone(),
                                 file_path: path.clone(),
                                 samples,

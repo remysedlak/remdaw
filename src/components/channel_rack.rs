@@ -1,4 +1,4 @@
-use crate::model::MyApp;
+use crate::models::MyApp;
 
 pub fn render(app: &mut MyApp, ctx: &egui::Context) {
     egui::Window::new("Channel Rack")
@@ -7,6 +7,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
         .show(ctx, |ui| {
             let mut state = app.audio_state.lock().unwrap();
             let mut clicked_instrument: Option<usize> = None;
+            let current_step = state.current_step;
 
             ui.spacing_mut().item_spacing = egui::Vec2::new(1.0, 5.0);
 
@@ -25,6 +26,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                     // Step buttons
                     for step in 0..16 {
                         let is_active = state.pattern[instrument][step];
+                        let is_current = step == current_step && state.is_playing;
 
                         let button = egui::Button::new("")
                             .min_size(egui::Vec2::new(20.0, 25.0));
@@ -32,7 +34,10 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                         let valid = vec![4, 5, 6, 7, 12, 13, 14, 15];
                         let is_colored = !valid.contains(&step);
 
-                        let button = if is_active {
+                        let button = if is_current {
+                            // Highlight current step with bright color
+                            button.fill(egui::Color32::from_rgb(0, 200, 255))
+                        } else if is_active {
                             button.fill(egui::Color32::from_rgb(150, 0, 0))
                         } else if is_colored {
                             button.fill(egui::Color32::from_rgb(50, 50, 50))
@@ -50,7 +55,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
             // Handle the click after the loop
             if let Some(idx) = clicked_instrument {
                 let file_path = state.instruments[idx].file_path.clone();
-                drop(state); // Drop lock before modifying app
+                drop(state);
                 app.selected_file = Some(file_path);
                 app.is_file_info_open = true;
             }

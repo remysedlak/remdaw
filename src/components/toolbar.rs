@@ -1,7 +1,9 @@
-use crate::model::MyApp;
+use crate::models::MyApp;
+use eframe::emath::Align::Center;
 
 pub fn render(app: &mut MyApp, ctx: &egui::Context) {
     egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
+        ui.add_space(12.0);
         ui.horizontal(|ui| {
             let mut state = app.audio_state.lock().unwrap();
 
@@ -43,12 +45,10 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
 
             drop(state); // Release lock before next button
 
+            ui.add_space(24.0);
+
             if ui.button("rack").clicked() {
                 app.is_channel_rack_open = !app.is_channel_rack_open;
-            }
-
-            if ui.button("settings").clicked() {
-                app.is_settings_open = !app.is_settings_open;
             }
 
             if ui.button("files").clicked() {
@@ -59,7 +59,13 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                 app.is_patterns_open = !app.is_patterns_open
             }
 
-
-        })
+            ui.with_layout(egui::Layout::right_to_left(Center), |ui| {
+                if ui.button("settings").clicked() {
+                    app.is_settings_open = !app.is_settings_open;
+                }
+            });
+        });
+        ui.add_space(12.0);
     });
+
 }

@@ -1,13 +1,13 @@
 mod ui;
 mod audio;
-mod model;
+mod models;
 mod components;
 mod config;
-mod font_loader;
+mod utils;
 
-use model::MyApp;
+use models::MyApp;
 use eframe::egui;
-use crate::font_loader::prepare_fonts;
+use crate::utils::prepare_fonts;
 
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).

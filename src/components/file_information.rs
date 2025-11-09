@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use crate::model::{Instrument, MyApp};
+use crate::models::{Instrument, MyApp};
 
 pub fn render(app: &mut MyApp, ctx: &egui::Context, file: &PathBuf) {
     egui::Window::new("File Information")
