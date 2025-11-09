@@ -1,6 +1,5 @@
 use crate::model::{MyApp};
-use crate::components::{channel_rack, file_explorer, file_information, playlists, settings, toolbar};
-use crate::config::AppConfig;
+use crate::components::{channel_rack, file_explorer, file_information, patterns, settings, toolbar};
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
@@ -43,9 +42,13 @@ impl eframe::App for MyApp {
 
         toolbar::render(self, ctx);
 
-        file_explorer::render(self, ctx);
-
-        playlists::render(self, ctx);
+        if self.is_files_explorer_open {
+            file_explorer::render(self, ctx);
+        }
+        
+        if self.is_patterns_open {
+            patterns::render(self, ctx);
+        }
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("Playlist");

@@ -50,6 +50,16 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
             if ui.button("settings").clicked() {
                 app.is_settings_open = !app.is_settings_open;
             }
+
+            if ui.button("files").clicked() {
+                app.is_files_explorer_open = !app.is_files_explorer_open;
+            }
+
+            if ui.button("patterns").clicked() {
+                app.is_patterns_open = !app.is_patterns_open
+            }
+
+
         })
     });
 }

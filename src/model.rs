@@ -80,6 +80,8 @@ pub struct MyApp {
     pub is_channel_rack_open: bool,
     pub is_settings_open: bool,
     pub is_file_info_open: bool,
+    pub is_files_explorer_open: bool,
+    pub is_patterns_open: bool,
     pub selected_file: Option<PathBuf>,
     pub config: AppConfig,
 }
@@ -92,6 +94,8 @@ impl Default for MyApp {
             audio_state,
             is_channel_rack_open: false,
             is_settings_open: false,
+            is_patterns_open: true,
+            is_files_explorer_open: true,
             config: AppConfig::load(),
             is_file_info_open: false,
             selected_file: None,
