@@ -53,37 +53,82 @@ fn play_instrument(data: &mut [f32], state: &Arc<Mutex<AudioState>>) {
 
     for frame in data.chunks_mut(channels) {
         if state.is_playing {
-            // 16th note resolution: divide samples_per_beat by 4
-            let step = (state.metronome_counter / (state.samples_per_beat / 4.0)) as usize % 16;
+            let current_beat = state.playhead_position;
+            let samples_per_beat = state.samples_per_beat;
 
-            if step != state.current_step {
-                state.current_step = step;
+            // Clone what we need to avoid borrow issues
+            let clips = state.playlist.clips.clone();
+            let patterns = state.patterns.clone();
 
-                // Trigger instruments based on pattern
-                for i in 0..state.instruments.len() {
-                    if state.pattern[i][step] {
-                        state.instruments[i].is_playing = true;
-                        state.instruments[i].position = 0;
+            // Collect triggers
+            let mut triggers: Vec<(usize, usize)> = Vec::new();
+            let mut audio_triggers: Vec<usize> = Vec::new();
+
+            for clip in &clips {
+                let clip_start = clip.start_time;
+                let clip_end = clip.start_time + clip.length;
+
+                if current_beat >= clip_start && current_beat < clip_end {
+                    let position_in_clip = current_beat - clip_start;
+
+                    match &clip.clip_type {
+                        crate::models::ClipType::Pattern(pattern_idx) => {
+                            let step_in_pattern = ((position_in_clip * 4.0) as usize) % 16;
+                            let last_step = (((current_beat - 1.0 / samples_per_beat as f64) - clip_start) * 4.0) as usize % 16;
+
+                            if step_in_pattern != last_step {
+                                if let Some(pattern) = patterns.get(*pattern_idx) {
+                                    for (i, row) in pattern.data.iter().enumerate() {
+                                        if row[step_in_pattern] {
+                                            triggers.push((i, step_in_pattern));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        crate::models::ClipType::AudioFile(instrument_idx) => {
+                            if position_in_clip < 1.0 / samples_per_beat as f64 {
+                                audio_triggers.push(*instrument_idx);
+                            }
+                        }
                     }
                 }
+            }
 
-                // Trigger metronome only every 4 steps (on the beat)
-                if state.is_metronome && step % 4 == 0 {
+            // Apply triggers
+            for (instrument_idx, _) in triggers {
+                if let Some(instrument) = state.instruments.get_mut(instrument_idx) {
+                    instrument.is_playing = true;
+                    instrument.position = 0;
+                }
+            }
+
+            for instrument_idx in audio_triggers {
+                if let Some(instrument) = state.instruments.get_mut(instrument_idx) {
+                    if !instrument.is_playing {
+                        instrument.is_playing = true;
+                        instrument.position = 0;
+                    }
+                }
+            }
+
+            // Metronome
+            if state.is_metronome {
+                let beat = state.playhead_position.floor() as usize;
+                let last_beat = (state.playhead_position - 1.0 / samples_per_beat as f64).floor() as usize;
+                if beat != last_beat {
                     state.metronome_playing = true;
                     state.metronome_position = 0;
                 }
             }
 
             state.metronome_counter += 1.0;
-
-            // Update playhead position (in beats)
-            state.playhead_position = (state.metronome_counter / state.samples_per_beat) as f64;
+            state.playhead_position = (state.metronome_counter / samples_per_beat) as f64;
         }
 
         // Mix all instruments
         let mut mix = 0.0;
 
-        // Mix channel rack instruments
         for instrument in &mut state.instruments {
             if instrument.is_playing {
                 if instrument.position < instrument.samples.len() {
@@ -95,7 +140,6 @@ fn play_instrument(data: &mut [f32], state: &Arc<Mutex<AudioState>>) {
             }
         }
 
-        // Mix metronome separately
         if state.metronome_playing {
             if state.metronome_position < state.metronome_sample.len() {
                 mix += state.metronome_sample[state.metronome_position];
@@ -105,7 +149,6 @@ fn play_instrument(data: &mut [f32], state: &Arc<Mutex<AudioState>>) {
             }
         }
 
-        // Mix preview sound separately
         if let Some(ref mut preview) = state.preview_sound {
             if preview.is_playing {
                 if preview.position < preview.samples.len() {

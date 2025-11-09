@@ -71,6 +71,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                     response.context_menu(|ui| {
                         if ui.button("Delete").clicked() {
                             // Handle delete
+                            app.audio_state.lock().unwrap().patterns.remove(idx);
                             ui.close();
                         }
                         if ui.button("Rename").clicked() {
@@ -82,6 +83,8 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                         }
                         if ui.button("Duplicate").clicked() {
                             // Handle duplicate
+                            let mut state = app.audio_state.lock().unwrap();
+                            state.patterns.push(pattern.clone());
                             ui.close();
                         }
                     });
@@ -114,11 +117,5 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                 state.pattern = pattern.data.clone();
             }
         }
-    }
-}
-
-pub fn rename_pattern(pattern: &mut Pattern, new_name: String) {
-    if new_name.len() > 0 {
-        pattern.name = new_name;
     }
 }

@@ -51,12 +51,22 @@ impl Playlist {
     }
 }
 
+
+// In models.rs
+#[derive(Clone)]
+pub enum ClipType {
+    Pattern(usize), // Index into patterns vec
+    AudioFile(usize), // Index into instruments vec
+}
+
+#[derive(Clone)]
 pub struct PlacedClip {
-    pub(crate) pattern_id: usize, // reference to your pattern/sample
-    pub(crate) track_index: usize,
-    pub(crate) start_time: f64, // in beats or samples
-    pub(crate) length: f64,
-    pub(crate) color: Color32,
+    pub clip_type: ClipType,
+    pub name: String,
+    pub track_index: usize,
+    pub start_time: f64, // in beats
+    pub length: f64,
+    pub color: Color32,
 }
 
 pub struct Track {
@@ -133,7 +143,6 @@ pub struct AudioState {
 
     pub playlist: Playlist,
     pub playhead_position: f64,
-
     pub patterns: Vec<Pattern>,
 }
 

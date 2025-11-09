@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+use eframe::epaint::{Color32, Stroke};
 use crate::models::MyApp;
 
 pub fn render(app: &mut MyApp, ctx: &egui::Context) {
@@ -7,12 +9,9 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
         ui.label(egui::RichText::new("Playlist").strong().size(20.0));
         ui.separator();
 
-        let mut state = app.audio_state.lock().unwrap();
-        let playlist = &mut state.playlist;
-
         let (response, painter) = ui.allocate_painter(
             egui::Vec2::new(ui.available_width(), 400.0),
-            egui::Sense::click_and_drag()
+            egui::Sense::click_and_drag(),
         );
 
         let rect = response.rect;
@@ -22,54 +21,112 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
 
         if pointer_released {
             if let Some(pointer_pos) = ctx.pointer_interact_pos() {
-                // Check if a pattern is being dragged
+                // Check for pattern being dragged
                 if let Some(pattern_idx) = ctx.memory(|mem| {
                     mem.data.get_temp::<usize>(egui::Id::new("dragging_pattern"))
                 }) {
                     println!("Pattern {} being dropped at {:?}", pattern_idx, pointer_pos);
 
-                    // Check if pointer is over the playlist area
                     if rect.contains(pointer_pos) {
                         println!("Drop is inside playlist!");
 
-                        // Calculate which track and time position
                         let timeline_start_x = rect.left() + 150.0;
                         let tracks_start_y = rect.top() + 50.0;
                         let pixels_per_beat = 100.0;
 
-                        // Find track index
                         let relative_y = pointer_pos.y - tracks_start_y;
                         let track_idx = (relative_y / 60.0).floor() as usize;
 
-                        // Calculate start time in beats
                         let relative_x = pointer_pos.x - timeline_start_x;
-                        let start_beat = (relative_x / pixels_per_beat).max(0.0);
+                        let start_beat = (relative_x / pixels_per_beat).max(0.0).round();
 
-                        // Snap to nearest beat
-                        let snapped_beat = start_beat.round();
+                        println!("Track: {}, Beat: {}", track_idx, start_beat);
 
-                        println!("Track: {}, Beat: {}", track_idx, snapped_beat);
+                        let mut state = app.audio_state.lock().unwrap();
+                        if track_idx < state.playlist.tracks.len() {
+                            let name = state.patterns.get(pattern_idx)
+                                .map(|p| p.name.clone())
+                                .unwrap_or_else(|| "Unknown".to_string());
 
-                        if track_idx < playlist.tracks.len() {
-                            // Add the clip
-                            playlist.clips.push(crate::models::PlacedClip {
-                                pattern_id: pattern_idx,
+                            state.playlist.clips.push(crate::models::PlacedClip {
+                                clip_type: crate::models::ClipType::Pattern(pattern_idx),
                                 track_index: track_idx,
-                                start_time: snapped_beat as f64,
+                                start_time: start_beat as f64,
+                                name,
                                 length: 4.0,
-                                color: egui::Color32::from_rgb(80, 120, 200),
+                                color: Color32::from_rgb(80, 120, 200),
                             });
-                            println!("Clip added! Total clips: {}", playlist.clips.len());
+                            println!("Pattern clip added! Total clips: {}", state.playlist.clips.len());
                         }
                     }
 
-                    // Clear the drag state
                     ctx.memory_mut(|mem| {
                         mem.data.remove::<usize>(egui::Id::new("dragging_pattern"));
                     });
                 }
+                // Check for audio file being dragged
+                else if let Some(file_path) = ctx.memory(|mem| {
+                    mem.data.get_temp::<PathBuf>(egui::Id::new("dragging_audio_file"))
+                }) {
+                    println!("Audio file being dropped: {:?}", file_path);
+
+                    if rect.contains(pointer_pos) {
+                        println!("Drop is inside playlist!");
+
+                        let timeline_start_x = rect.left() + 150.0;
+                        let tracks_start_y = rect.top() + 50.0;
+                        let pixels_per_beat = 100.0;
+
+                        let relative_y = pointer_pos.y - tracks_start_y;
+                        let track_idx = (relative_y / 60.0).floor() as usize;
+
+                        let relative_x = pointer_pos.x - timeline_start_x;
+                        let start_beat = (relative_x / pixels_per_beat).max(0.0).round();
+
+                        let mut state = app.audio_state.lock().unwrap();
+                        if track_idx < state.playlist.tracks.len() {
+                            // Load the audio file and add as instrument
+                            let samples = crate::audio::path_to_vector(file_path.to_str().unwrap());
+                            let name = file_path.file_name()
+                                .and_then(|n| n.to_str())
+                                .unwrap_or("Unknown")
+                                .to_string();
+
+                            // Add to instruments
+                            state.instruments.push(crate::models::Instrument {
+                                name: name.clone(),
+                                file_path: file_path.clone(),
+                                samples,
+                                position: 0,
+                                is_playing: false,
+                            });
+
+                            let instrument_idx = state.instruments.len() - 1;
+
+                            // Add clip to playlist
+                            state.playlist.clips.push(crate::models::PlacedClip {
+                                clip_type: crate::models::ClipType::AudioFile(instrument_idx),
+                                track_index: track_idx,
+                                start_time: start_beat as f64,
+                                name: name.clone(),
+                                length: 4.0,
+                                color: Color32::from_rgb(200, 120, 80),
+                            });
+
+                            println!("Audio clip added!");
+                        }
+                    }
+
+                    ctx.memory_mut(|mem| {
+                        mem.data.remove::<PathBuf>(egui::Id::new("dragging_audio_file"));
+                    });
+                }
             }
         }
+
+        // Lock state for drawing (immutable borrow)
+        let state = app.audio_state.lock().unwrap();
+        let playlist = &state.playlist;
 
         let beats_per_bar = 4;
         let pixels_per_beat = 100.0;
@@ -82,7 +139,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                 egui::vec2(rect.width() - 150.0, 40.0)
             ),
             0.0,
-            egui::Color32::from_gray(30)
+            Color32::from_gray(30)
         );
 
         // Draw beat markers
@@ -97,9 +154,9 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
 
             let tick_height = if is_bar { 30.0 } else { 15.0 };
             let color = if is_bar {
-                egui::Color32::WHITE
+                Color32::WHITE
             } else {
-                egui::Color32::from_gray(120)
+                Color32::from_gray(120)
             };
 
             painter.line_segment(
@@ -107,7 +164,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                     egui::pos2(x, rect.top()),
                     egui::pos2(x, rect.top() + tick_height)
                 ],
-                egui::Stroke::new(if is_bar { 2.0 } else { 1.0 }, color)
+                Stroke::new(if is_bar { 2.0 } else { 1.0 }, color)
             );
 
             if is_bar {
@@ -117,7 +174,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                     egui::Align2::LEFT_TOP,
                     format!("{}", bar_number),
                     egui::FontId::proportional(14.0),
-                    egui::Color32::WHITE
+                    Color32::WHITE
                 );
             }
         }
@@ -134,10 +191,18 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                 ),
                 0.0,
                 if idx % 2 == 0 {
-                    egui::Color32::from_gray(40)
+                    Color32::from_gray(40)
                 } else {
-                    egui::Color32::from_gray(50)
+                    Color32::from_gray(50)
                 }
+            );
+
+            // mute button
+             painter.circle(
+                egui::Pos2 { x: rect.left(), y: y + track.height / 2.0 },
+                10.0,
+                Color32::from_rgb(155, 0, 0),
+                Stroke::new(1.0, Color32::WHITE)
             );
 
             painter.text(
@@ -145,8 +210,9 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                 egui::Align2::LEFT_CENTER,
                 &track.name,
                 egui::FontId::default(),
-                egui::Color32::WHITE
+                Color32::WHITE
             );
+
         }
 
         // Draw clips
@@ -157,7 +223,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
             let x = timeline_start_x + (clip.start_time as f32 * pixels_per_beat);
             let width = clip.length as f32 * pixels_per_beat;
 
-            painter.rect_filled(
+            let mute = painter.rect_filled(
                 egui::Rect::from_min_size(
                     egui::pos2(x, y + 5.0),
                     egui::vec2(width, track.height - 10.0)
@@ -166,12 +232,13 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                 clip.color
             );
 
+
             painter.text(
                 egui::pos2(x + 5.0, y + track.height / 2.0),
                 egui::Align2::LEFT_CENTER,
-                format!("Pattern {}", clip.pattern_id),
+                format!("{}", clip.name),
                 egui::FontId::default(),
-                egui::Color32::WHITE
+                Color32::WHITE
             );
         }
 
@@ -180,7 +247,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
         painter.vline(
             playhead_x,
             rect.top()..=rect.bottom(),
-            egui::Stroke::new(3.0, egui::Color32::RED)
+            Stroke::new(3.0, Color32::RED)
         );
     });
 }
