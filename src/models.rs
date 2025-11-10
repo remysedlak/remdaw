@@ -6,6 +6,21 @@ use crate::audio;
 use crate::audio::path_to_vector;
 use crate::config::AppConfig;
 
+
+#[derive(Clone)]
+pub enum ResizeEdge {
+    Left,
+    Right,
+}
+
+#[derive(Clone)]
+pub struct ResizeState {
+    pub clip_index: usize,
+    pub edge: ResizeEdge,
+    pub initial_start: f64,
+    pub initial_length: f64,
+}
+
 // Where all music positions are stored for playback and export
 pub struct Playlist {
     pub(crate) tracks: Vec<Track>,
@@ -95,6 +110,10 @@ pub struct MyApp {
 }
 
 pub struct UiState {
+    pub snap_to_grid: bool,        // Add this
+    pub snap_division: f32,
+    pub resizing_clip: Option<ResizeState>,
+    pub playlist_height: f32,
     pub is_channel_rack_open: bool,
     pub is_settings_open: bool,
     pub is_file_info_open: bool,
@@ -107,11 +126,16 @@ pub struct UiState {
 
 impl Default for MyApp {
     fn default() -> Self {
-        let ui_state = UiState {  is_channel_rack_open: false,
+        let ui_state = UiState {
+            snap_to_grid: true,
+            snap_division: 1.0, // 1.0 = bar, 0.25 = beat, 0.0625 = 16th note)
+            is_channel_rack_open: false,
+            playlist_height: 300.0,
             is_settings_open: false,
             is_patterns_open: true,
             pattern_rename_popup: None,
             is_files_explorer_open: true,
+            resizing_clip: None,
             is_file_info_open: false, rename_buffer: String::new(), is_pattern_delete: false };
 
         let (_audio_stream, audio_state) = audio::init();

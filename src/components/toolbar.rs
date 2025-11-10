@@ -10,8 +10,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
             // Editable BPM with DragValue
             ui.label("BPM:");
             if ui
-                .add(
-                    egui::DragValue::new(&mut state.bpm)
+                .add(egui::DragValue::new(&mut state.bpm)
                         .speed(1.0)
                         .range(40..=300),
                 )
@@ -31,7 +30,6 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
             let label = if state.is_playing { "pause" } else { "play" };
             if ui.button(label).clicked() {
                 state.is_playing = !state.is_playing;
-                state.metronome_counter = 0.0;
             }
 
             if ui.button("stop").clicked() {
@@ -59,6 +57,30 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
             if ui.button("patterns").clicked() {
                 app.ui_state.is_patterns_open = !app.ui_state.is_patterns_open
             }
+
+            // Add this somewhere in your UI (maybe in main.rs or a settings panel)
+            ui.horizontal(|ui| {
+                ui.checkbox(&mut app.ui_state.snap_to_grid, "Snap to Grid");
+
+                if app.ui_state.snap_to_grid {
+                    ui.label("Snap:");
+                    if ui.selectable_label(app.ui_state.snap_division == 4.0, "Bar").clicked() {
+                        app.ui_state.snap_division = 4.0; // 4 beats = 1 bar
+                    }
+                    if ui.selectable_label(app.ui_state.snap_division == 1.0, "Beat").clicked() {
+                        app.ui_state.snap_division = 1.0; // 1 beat
+                    }
+                    if ui.selectable_label(app.ui_state.snap_division == 0.5, "1/2").clicked() {
+                        app.ui_state.snap_division = 0.5; // Half beat
+                    }
+                    if ui.selectable_label(app.ui_state.snap_division == 0.25, "1/4").clicked() {
+                        app.ui_state.snap_division = 0.25; // Quarter beat
+                    }
+                    if ui.selectable_label(app.ui_state.snap_division == 0.125, "1/8").clicked() {
+                        app.ui_state.snap_division = 0.125; // Eighth beat
+                    }
+                }
+            });
 
             ui.with_layout(egui::Layout::right_to_left(Center), |ui| {
                 if ui.button("settings").clicked() {

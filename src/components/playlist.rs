@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use eframe::epaint::{Color32, Stroke};
-use crate::models::MyApp;
+use crate::models::{MyApp, ClipType, ResizeEdge, ResizeState};
 
 pub fn render(app: &mut MyApp, ctx: &egui::Context) {
     ctx.request_repaint();
@@ -10,14 +10,24 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
         ui.separator();
 
         let (response, painter) = ui.allocate_painter(
-            egui::Vec2::new(ui.available_width(), 400.0),
+            egui::Vec2::new(ui.available_width(), app.ui_state.playlist_height),
             egui::Sense::click_and_drag(),
         );
 
         let rect = response.rect;
+        let pointer_pos = ctx.pointer_interact_pos();
 
-        // Check if any drag just ended (anywhere on screen)
+        const EDGE_GRAB_DISTANCE: f32 = 8.0;
+
+        // Check if pointer button just pressed or released
+        let pointer_pressed = ctx.input(|i| i.pointer.primary_pressed());
         let pointer_released = ctx.input(|i| i.pointer.any_released());
+
+        // Handle resize drag ending
+        if pointer_released && app.ui_state.resizing_clip.is_some() {
+            println!("Resize ended");
+            app.ui_state.resizing_clip = None;
+        }
 
         if pointer_released {
             if let Some(pointer_pos) = ctx.pointer_interact_pos() {
@@ -198,7 +208,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
             );
 
             // mute button
-             painter.circle(
+            painter.circle(
                 egui::Pos2 { x: rect.left(), y: y + track.height / 2.0 },
                 10.0,
                 Color32::from_rgb(155, 0, 0),
@@ -212,26 +222,39 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                 egui::FontId::default(),
                 Color32::WHITE
             );
-
         }
 
-        // Draw clips
-        for clip in &playlist.clips {
+        // Track which edge we're hovering over
+        let mut hovered_edge: Option<(usize, ResizeEdge)> = None;
+
+        // Draw clips WITH resize detection
+        for (clip_idx, clip) in playlist.clips.iter().enumerate() {
             let track = &playlist.tracks[clip.track_index];
             let y = tracks_start_y + clip.track_index as f32 * track.height;
 
             let x = timeline_start_x + (clip.start_time as f32 * pixels_per_beat);
             let width = clip.length as f32 * pixels_per_beat;
 
-            let mute = painter.rect_filled(
-                egui::Rect::from_min_size(
-                    egui::pos2(x, y + 5.0),
-                    egui::vec2(width, track.height - 10.0)
-                ),
-                5.0,
-                clip.color
+            let clip_rect = egui::Rect::from_min_size(
+                egui::pos2(x, y + 5.0),
+                egui::vec2(width, track.height - 10.0)
             );
 
+            // Check if we're hovering near edges (only for Pattern clips)
+            if let Some(pos) = pointer_pos {
+                if matches!(clip.clip_type, ClipType::Pattern(_)) && clip_rect.contains(pos) {
+                    let dist_to_left = (pos.x - clip_rect.left()).abs();
+                    let dist_to_right = (pos.x - clip_rect.right()).abs();
+
+                    if dist_to_left < EDGE_GRAB_DISTANCE {
+                        hovered_edge = Some((clip_idx, ResizeEdge::Left));
+                    } else if dist_to_right < EDGE_GRAB_DISTANCE {
+                        hovered_edge = Some((clip_idx, ResizeEdge::Right));
+                    }
+                }
+            }
+
+            painter.rect_filled(clip_rect, 5.0, clip.color);
 
             painter.text(
                 egui::pos2(x + 5.0, y + track.height / 2.0),
@@ -249,5 +272,89 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
             rect.top()..=rect.bottom(),
             Stroke::new(3.0, Color32::RED)
         );
+
+        drop(state); // Release the lock before modifying
+
+        // Update cursor based on hover
+        if hovered_edge.is_some() {
+            ctx.set_cursor_icon(egui::CursorIcon::ResizeHorizontal);
+        }
+
+        // Handle resize drag starting - check when pointer is pressed AND we're hovering an edge
+        if pointer_pressed && hovered_edge.is_some() && app.ui_state.resizing_clip.is_none() {
+            if let Some((clip_idx, edge)) = hovered_edge {
+                println!("Started resizing clip {} on edge {:?}", clip_idx, match edge {
+                    ResizeEdge::Left => "Left",
+                    ResizeEdge::Right => "Right",
+                });
+
+                let state = app.audio_state.lock().unwrap();
+                let clip = &state.playlist.clips[clip_idx];
+
+                app.ui_state.resizing_clip = Some(ResizeState {
+                    clip_index: clip_idx,
+                    edge,
+                    initial_start: clip.start_time,
+                    initial_length: clip.length,
+                });
+            }
+        }
+
+        // Handle active resizing - check if we're currently in a resize state and pointer is down
+        // Handle active resizing - check if we're currently in a resize state and pointer is down
+        // Handle active resizing - check if we're currently in a resize state and pointer is down
+        if ctx.input(|i| i.pointer.primary_down()) {
+            if let Some(resize_state) = &app.ui_state.resizing_clip {
+                let drag_delta = ctx.input(|i| i.pointer.delta());
+
+                if drag_delta.x.abs() > 0.01 { // Only update if there's actual movement
+                    let delta_beats = drag_delta.x / pixels_per_beat;
+
+                    println!("Resizing: delta_beats = {}", delta_beats);
+
+                    let mut state = app.audio_state.lock().unwrap();
+                    let clip = &mut state.playlist.clips[resize_state.clip_index];
+
+                    match resize_state.edge {
+                        ResizeEdge::Left => {
+                            // Dragging left edge: change start and adjust length
+                            let new_start = clip.start_time + delta_beats as f64;
+                            let new_length = clip.length - delta_beats as f64;
+
+                            println!("Left edge: new_start = {}, new_length = {}", new_start, new_length);
+
+                            // Minimum length of 0.25 beats
+                            if new_length > 0.25 && new_start >= 0.0 {
+                                // Apply snapping if enabled
+                                if app.ui_state.snap_to_grid {
+                                    let snap_div = app.ui_state.snap_division as f64;
+                                    clip.start_time = (new_start / snap_div).round() * snap_div;
+                                    clip.length = (new_length / snap_div).round() * snap_div;
+                                } else {
+                                    clip.start_time = new_start;
+                                    clip.length = new_length;
+                                }
+                            }
+                        }
+                        ResizeEdge::Right => {
+                            // Dragging right edge: only change length
+                            let new_length = clip.length + delta_beats as f64;
+
+                            println!("Right edge: new_length = {}", new_length);
+
+                            if new_length > 0.25 {
+                                // Apply snapping if enabled
+                                if app.ui_state.snap_to_grid {
+                                    let snap_div = app.ui_state.snap_division as f64;
+                                    clip.length = (new_length / snap_div).round() * snap_div;
+                                } else {
+                                    clip.length = new_length;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     });
 }
