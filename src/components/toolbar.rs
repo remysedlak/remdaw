@@ -31,9 +31,12 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
             let label = if state.is_playing { "\u{23F8}" } else { "\u{25B6}" }; // pause else play
             if ui.add_sized([25.0, 20.0], egui::Button::new(label)).clicked() {
                 if !state.is_playing {
+                    state.is_playing = true;
+                }
+                else if !state.is_playing && !state.just_started{
                     state.metronome_counter = 0.0;
                     state.playhead_position = 0.0;
-                    state.just_started = true;  // Keep this
+                    state.just_started = true;
                     state.is_playing = true;
                 }
                 else {

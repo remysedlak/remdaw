@@ -99,11 +99,6 @@ fn play_instrument(data: &mut [f32], state: &Arc<Mutex<AudioState>>) {
             let current_beat = state.playhead_position;
             let samples_per_beat = state.samples_per_beat;
 
-            // DEBUG
-            if current_beat < 0.5 {
-                println!("playhead: {}, metronome_counter: {}", current_beat, state.metronome_counter);
-            }
-
             // Clone data to avoid borrow checker issues
             // (we need to mutate instruments while reading clips/patterns)
             let clips = state.playlist.clips.clone();

@@ -6,3 +6,4 @@ pub mod file_information;
 pub mod patterns;
 pub mod playlist;
 pub mod popups;
+pub mod snap_to_grid;
