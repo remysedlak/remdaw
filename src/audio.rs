@@ -99,6 +99,11 @@ fn play_instrument(data: &mut [f32], state: &Arc<Mutex<AudioState>>) {
             let current_beat = state.playhead_position;
             let samples_per_beat = state.samples_per_beat;
 
+            // DEBUG
+            if current_beat < 0.5 {
+                println!("playhead: {}, metronome_counter: {}", current_beat, state.metronome_counter);
+            }
+
             // Clone data to avoid borrow checker issues
             // (we need to mutate instruments while reading clips/patterns)
             let clips = state.playlist.clips.clone();
@@ -127,15 +132,29 @@ fn play_instrument(data: &mut [f32], state: &Arc<Mutex<AudioState>>) {
                             let step_in_pattern = ((position_in_clip * 4.0) as usize) % 16;
 
                             // Get the previous step to detect step changes
-                            let last_step = (((current_beat - 1.0 / samples_per_beat as f64) - clip_start) * 4.0) as usize % 16;
+                            // At the very start of a clip, use a sentinel value to force trigger
+                            let last_step = if position_in_clip < 1.0 / samples_per_beat as f64 || just_started {
+                                999 // Force trigger at start of clip OR on first playback
+                            } else {
+                                (((current_beat - 1.0 / samples_per_beat as f64) - clip_start) * 4.0) as usize % 16
+                            };
 
-                            // Only trigger on step boundaries (when step changes) OR on first frame
-                            if step_in_pattern != last_step || just_started {
+                            // DEBUG - print first few beats
+                            if current_beat < 0.1 {
+                                println!("beat: {:.6}, pos_in_clip: {:.6}, step: {}, last_step: {}, just_started: {}",
+                                         current_beat, position_in_clip, step_in_pattern, last_step, just_started);
+                            }
+
+                            // Only trigger on step boundaries (when step changes)
+                            if step_in_pattern != last_step {
                                 if let Some(pattern) = patterns.get(*pattern_idx) {
                                     // Check each instrument row in the pattern
                                     for (i, row) in pattern.data.iter().enumerate() {
                                         // If this step is active, trigger the instrument
                                         if row[step_in_pattern] {
+                                            if current_beat < 0.1 {
+                                                println!("TRIGGERING instrument {} at step {}", i, step_in_pattern);
+                                            }
                                             triggers.push((i, step_in_pattern));
                                         }
                                     }
@@ -174,18 +193,20 @@ fn play_instrument(data: &mut [f32], state: &Arc<Mutex<AudioState>>) {
             }
 
             // Handle metronome click on beat boundaries
+            // Handle metronome click on beat boundaries
+            // Handle metronome click on beat boundaries
             if state.is_metronome {
-                let beat = state.playhead_position.floor() as usize;
-                let last_beat = (state.playhead_position - 1.0 / samples_per_beat as f64).floor() as usize;
+                let beat = state.playhead_position.floor() as i32;  // Change to i32
+                let last_beat = (state.playhead_position - 1.0 / samples_per_beat as f64).floor() as i32;  // Change to i32
 
-                // Trigger metronome when crossing a beat boundary OR on first frame
-                if beat != last_beat || just_started {
+                // Trigger metronome when crossing a beat boundary
+                if beat != last_beat {
                     state.metronome_playing = true;
                     state.metronome_position = 0;
                 }
             }
 
-            // Clear the just_started flag after first frame
+            // Clear just_started flag after first frame
             if state.just_started {
                 state.just_started = false;
             }

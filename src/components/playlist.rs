@@ -110,6 +110,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                                 position: 0,
                                 is_playing: false,
                             });
+                            state.pattern.push(vec![false; 16]);
 
                             let instrument_idx = state.instruments.len() - 1;
 
