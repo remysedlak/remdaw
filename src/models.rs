@@ -167,7 +167,7 @@ impl AudioState {
 impl Default for MyApp {
     fn default() -> Self {
         let ui_state = UiState {
-            snap_to_grid: true,
+            snap_to_grid: false,
             snap_division: 1.0, // 1.0 = bar, 0.25 = beat, 0.0625 = 16th note)
             is_channel_rack_open: false,
             playlist_height: 300.0,
