@@ -25,8 +25,11 @@ pub fn prepare_fonts() -> FontDefinitions {
     fonts
 }
 
-pub fn get_file_name(file: &PathBuf) -> String {
-    file.file_name()
+/// Shortens file path down to the file name.
+/// # Arguments:
+/// `path` - Full path to be shortened to String.
+pub fn get_file_name(path: &PathBuf) -> String {
+    path.file_name()
     .and_then(|n| n.to_str())
     .unwrap_or("Unknown").to_owned()
 }
