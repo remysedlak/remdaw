@@ -109,16 +109,26 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
 
         if should_add_pattern {
             let num = state.patterns.len() + 1;
-            let pattern_data = state.pattern.clone();
+            // Create a blank pattern with the same number of instruments as current
+            let num_instruments = state.instruments.len();
+            let blank_pattern = vec![vec![false; 16]; num_instruments];
+
             state.patterns.push(Pattern {
                 name: format!("Pattern {}", num),
-                data: pattern_data,
+                data: blank_pattern,
             });
         }
 
         if let Some(idx) = pattern_to_load {
+            // FIRST: Save the current pattern before switching
+            if let Some(current_idx) = state.current_pattern_index {
+                state.patterns[current_idx].data = state.pattern.clone();
+            }
+
+            // THEN: Load the new pattern
             if let Some(pattern) = state.patterns.get(idx) {
                 state.pattern = pattern.data.clone();
+                state.current_pattern_index = Some(idx); // Update which pattern we're editing
             }
         }
     }

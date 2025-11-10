@@ -4,6 +4,7 @@ use eframe::emath::Align::Center;
 pub fn render(app: &mut MyApp, ctx: &egui::Context) {
     egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
         ui.add_space(12.0);
+
         ui.horizontal(|ui| {
             let mut state = app.audio_state.lock().unwrap();
 
@@ -27,12 +28,19 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
 
             ui.add_space(24.0);
 
-            let label = if state.is_playing { "pause" } else { "play" };
-            if ui.button(label).clicked() {
-                state.is_playing = !state.is_playing;
-            }
+            let label = if state.is_playing { "\u{23F8}" } else { "\u{25B6}" }; // pause else play
 
-            if ui.button("stop").clicked() {
+            if ui.add_sized([25.0, 20.0], egui::Button::new(label)).clicked() {
+                if !state.is_playing {
+                    state.just_started = true;
+                    state.is_playing = true;
+                }
+                else {
+                    state.just_started = false;
+                    state.is_playing = false;
+                }
+            }
+            if ui.add(egui::Button::new("⏹")).clicked() {
                 state.is_playing = false;
                 state.playhead_position = 0.0;
                 state.metronome_counter = 0.0;

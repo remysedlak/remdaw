@@ -75,7 +75,7 @@ fn render_directory(ui: &mut egui::Ui, app: &mut MyApp, ctx: &egui::Context, pat
                         ui.painter().text(
                             rect.left_center() + egui::vec2(5.0, 0.0),
                             egui::Align2::LEFT_CENTER,
-                            format!("📄 {}", name),
+                            format!(">> {}", name),
                             egui::FontId::default(),
                             egui::Color32::WHITE
                         );

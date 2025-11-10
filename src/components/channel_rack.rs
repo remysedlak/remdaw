@@ -50,6 +50,10 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
 
                         if ui.add(button).clicked() {
                             state.pattern[instrument][step] = !is_active;
+
+                            if let Some(current_idx) = state.current_pattern_index {
+                                state.patterns[current_idx].data = state.pattern.clone();
+                            }
                         }
                     }
                 });

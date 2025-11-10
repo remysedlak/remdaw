@@ -95,6 +95,7 @@ pub struct UiState {
 
 // shared state between gui and cpal
 pub struct AudioState {
+    pub current_pattern_index: Option<usize>,
     pub instruments: Vec<Instrument>,
     pub bpm: i16,
     pub sampling_rate: f32,
@@ -108,7 +109,7 @@ pub struct AudioState {
     pub metronome_position: usize,
     pub metronome_playing: bool,
     pub preview_sound: Option<Instrument>,
-
+    pub just_started: bool,
     pub playlist: Playlist,
     pub playhead_position: f64,
     pub patterns: Vec<Pattern>,
@@ -141,6 +142,8 @@ impl AudioState {
         let mut patterns = Vec::new();
         patterns.push(Pattern { name:"Pattern 1".to_string(), data: pattern.clone() } );
         AudioState {
+            just_started: false,
+            current_pattern_index: Some(0),
             instruments,
             bpm: 130,
             sampling_rate,

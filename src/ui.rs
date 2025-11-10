@@ -31,6 +31,7 @@ impl eframe::App for MyApp {
         if self.ui_state.is_channel_rack_open {
             channel_rack::render(self, ctx);
         }
+
         if self.ui_state.is_file_info_open {
             let file_path = self.selected_file.clone();
             if let Some(ref path) = file_path {

@@ -103,6 +103,7 @@ fn play_instrument(data: &mut [f32], state: &Arc<Mutex<AudioState>>) {
             // (we need to mutate instruments while reading clips/patterns)
             let clips = state.playlist.clips.clone();
             let patterns = state.patterns.clone();
+            let just_started = state.just_started;
 
             // Vectors to store which sounds should be triggered this frame
             let mut triggers: Vec<(usize, usize)> = Vec::new(); // (instrument_idx, step)
@@ -128,8 +129,8 @@ fn play_instrument(data: &mut [f32], state: &Arc<Mutex<AudioState>>) {
                             // Get the previous step to detect step changes
                             let last_step = (((current_beat - 1.0 / samples_per_beat as f64) - clip_start) * 4.0) as usize % 16;
 
-                            // Only trigger on step boundaries (when step changes)
-                            if step_in_pattern != last_step {
+                            // Only trigger on step boundaries (when step changes) OR on first frame
+                            if step_in_pattern != last_step || just_started {
                                 if let Some(pattern) = patterns.get(*pattern_idx) {
                                     // Check each instrument row in the pattern
                                     for (i, row) in pattern.data.iter().enumerate() {
@@ -177,11 +178,16 @@ fn play_instrument(data: &mut [f32], state: &Arc<Mutex<AudioState>>) {
                 let beat = state.playhead_position.floor() as usize;
                 let last_beat = (state.playhead_position - 1.0 / samples_per_beat as f64).floor() as usize;
 
-                // Trigger metronome when crossing a beat boundary
-                if beat != last_beat {
+                // Trigger metronome when crossing a beat boundary OR on first frame
+                if beat != last_beat || just_started {
                     state.metronome_playing = true;
                     state.metronome_position = 0;
                 }
+            }
+
+            // Clear the just_started flag after first frame
+            if state.just_started {
+                state.just_started = false;
             }
 
             // Advance the playhead
