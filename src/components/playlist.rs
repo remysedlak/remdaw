@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use eframe::emath::Align::Center;
 use eframe::epaint::{Color32, Stroke};
+use crate::components::snap_to_grid;
 use crate::models::{MyApp, ClipType, ResizeEdge, ResizeState};
 
 pub fn render(app: &mut MyApp, ctx: &egui::Context) {
@@ -12,28 +13,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
             ui.label(egui::RichText::new("Playlist").strong().size(20.0));
 
             ui.with_layout(egui::Layout::right_to_left(Center), |ui| {
-                ui.horizontal(|ui| {
-
-                    if app.ui_state.snap_to_grid {
-                        ui.label("Snap:");
-                        if ui.selectable_label(app.ui_state.snap_division == 4.0, "Bar").clicked() {
-                            app.ui_state.snap_division = 4.0; // 4 beats = 1 bar
-                        }
-                        if ui.selectable_label(app.ui_state.snap_division == 1.0, "Beat").clicked() {
-                            app.ui_state.snap_division = 1.0; // 1 beat
-                        }
-                        if ui.selectable_label(app.ui_state.snap_division == 0.5, "1/2").clicked() {
-                            app.ui_state.snap_division = 0.5; // Half beat
-                        }
-                        if ui.selectable_label(app.ui_state.snap_division == 0.25, "1/4").clicked() {
-                            app.ui_state.snap_division = 0.25; // Quarter beat
-                        }
-                        if ui.selectable_label(app.ui_state.snap_division == 0.125, "1/8").clicked() {
-                            app.ui_state.snap_division = 0.125; // Eighth beat
-                        }
-                    }
-                    ui.checkbox(&mut app.ui_state.snap_to_grid, "Snap to Grid");
-                });
+                    snap_to_grid::render(ui, app);
             });
         });
         ui.separator();
