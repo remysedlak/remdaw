@@ -1,11 +1,14 @@
-use crate::models::MyApp;
+use crate::audio::path_to_vector;
+use crate::models::{Instrument, MyApp};
+use crate::utils::get_file_name;
 
 pub fn render(app: &mut MyApp, ctx: &egui::Context) {
+    ctx.request_repaint();
     egui::Window::new("Channel Rack")
-        .collapsible(false)
+        .collapsible(true)
         .open(&mut app.ui_state.is_channel_rack_open)
         .show(ctx, |ui| {
-            let mut state = app.audio_state.lock().unwrap();
+            let mut state = app.audio_state.lock().unwrap(); // unlock audio state mutex
             let mut clicked_instrument: Option<usize> = None;
             let current_step = state.current_step;
 
@@ -50,6 +53,13 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                         }
                     }
                 });
+            }
+
+            if ui.button("+").on_hover_text("Add new file").clicked() {
+                if let Some(path) = rfd::FileDialog::new().pick_file() {
+                    state.instruments.push(Instrument {file_path: path.clone(), name: get_file_name(&path), is_playing: false, position: 0, samples: path_to_vector(path.to_str().unwrap())});
+                    state.pattern.push(vec![false; 16]);
+                }
             }
 
             // Handle the click after the loop

@@ -87,6 +87,10 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                             state.patterns.push(pattern.clone());
                             ui.close();
                         }
+                        if ui.button("Open").clicked() {
+                            // Handle duplicate
+                            ui.close();
+                        }
                     });
 
                     ui.add_space(4.0);

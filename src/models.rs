@@ -36,37 +36,6 @@ pub struct Pattern {
     pub data: Vec<Vec<bool>>,  // The actual 16-step pattern for each instrument
 }
 
-impl Playlist {
-    pub fn new() -> Self {
-        Playlist {
-            tracks: vec![
-                Track {
-                    name: "Track 1".to_string(),
-                    height: 60.0,
-                    muted: false,
-                    solo: false,
-                },
-                Track {
-                    name: "Track 2".to_string(),
-                    height: 50.0,
-                    muted: false,
-                    solo: false,
-                },
-                Track {
-                    name: "Track 3".to_string(),
-                    height: 50.0,
-                    muted: false,
-                    solo: false,
-                },
-            ],
-            clips: Vec::new(),  // Empty - user will add clips
-            zoom_level: 1.0,
-            scroll_position: 0.0,
-        }
-    }
-}
-
-
 // In models.rs
 #[derive(Clone)]
 pub enum ClipType {
@@ -122,31 +91,6 @@ pub struct UiState {
     pub rename_buffer: String, // Store the temporary name
     pub is_pattern_delete: bool,
     pub is_patterns_open: bool,
-}
-
-impl Default for MyApp {
-    fn default() -> Self {
-        let ui_state = UiState {
-            snap_to_grid: true,
-            snap_division: 1.0, // 1.0 = bar, 0.25 = beat, 0.0625 = 16th note)
-            is_channel_rack_open: false,
-            playlist_height: 300.0,
-            is_settings_open: false,
-            is_patterns_open: true,
-            pattern_rename_popup: None,
-            is_files_explorer_open: true,
-            resizing_clip: None,
-            is_file_info_open: false, rename_buffer: String::new(), is_pattern_delete: false };
-
-        let (_audio_stream, audio_state) = audio::init();
-        Self {
-            _audio_stream,
-            audio_state,
-            ui_state,
-            config: AppConfig::load(),
-            selected_file: None,
-        }
-    }
 }
 
 // shared state between gui and cpal
@@ -213,6 +157,61 @@ impl AudioState {
             playlist: Playlist::new(),
             playhead_position: 0.0,
             patterns
+        }
+    }
+}
+
+impl Default for MyApp {
+    fn default() -> Self {
+        let ui_state = UiState {
+            snap_to_grid: true,
+            snap_division: 1.0, // 1.0 = bar, 0.25 = beat, 0.0625 = 16th note)
+            is_channel_rack_open: false,
+            playlist_height: 300.0,
+            is_settings_open: false,
+            is_patterns_open: true,
+            pattern_rename_popup: None,
+            is_files_explorer_open: true,
+            resizing_clip: None,
+            is_file_info_open: false, rename_buffer: String::new(), is_pattern_delete: false };
+
+        let (_audio_stream, audio_state) = audio::init();
+        Self {
+            _audio_stream,
+            audio_state,
+            ui_state,
+            config: AppConfig::load(),
+            selected_file: None,
+        }
+    }
+}
+
+impl Playlist {
+    pub fn new() -> Self {
+        Playlist {
+            tracks: vec![
+                Track {
+                    name: "Track 1".to_string(),
+                    height: 60.0,
+                    muted: false,
+                    solo: false,
+                },
+                Track {
+                    name: "Track 2".to_string(),
+                    height: 50.0,
+                    muted: false,
+                    solo: false,
+                },
+                Track {
+                    name: "Track 3".to_string(),
+                    height: 50.0,
+                    muted: false,
+                    solo: false,
+                },
+            ],
+            clips: Vec::new(),  // Empty - user will add clips
+            zoom_level: 1.0,
+            scroll_position: 0.0,
         }
     }
 }

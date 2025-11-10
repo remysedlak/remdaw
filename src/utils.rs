@@ -1,6 +1,8 @@
+use std::path::PathBuf;
 use eframe::epaint::text::FontDefinitions;
 
-// returns FontDefintions created from a ttf file
+/// FontDefinition constructor called on app init.
+/// Prepares the proper FontDefinitions with a ttf font file.
 pub fn prepare_fonts() -> FontDefinitions {
 
     let mut fonts = FontDefinitions::default();
@@ -21,4 +23,10 @@ pub fn prepare_fonts() -> FontDefinitions {
         .unwrap()
         .insert(0, "app_font".to_owned());
     fonts
+}
+
+pub fn get_file_name(file: &PathBuf) -> String {
+    file.file_name()
+    .and_then(|n| n.to_str())
+    .unwrap_or("Unknown").to_owned()
 }
