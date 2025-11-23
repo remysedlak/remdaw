@@ -32,10 +32,12 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                         Sense::hover()
                     );
 
+                    // grab portion
                     let handle_rect = Rect::from_min_size(
                         full_rect.min,
                         Vec2::new(handle_width, height)
                     );
+                    // interactive portion
                     let name_rect = Rect::from_min_size(
                         Pos2::new(full_rect.min.x + handle_width, full_rect.min.y),
                         Vec2::new(name_width, height)
@@ -66,7 +68,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                         ctx.set_cursor_icon(egui::CursorIcon::Grab);
                     }
 
-                    // Draw background
+                    // Color of the pattern buttons
                     let bg_color = if name_response.hovered() {
                         Color32::from_rgb(70, 70, 90)
                     } else {
@@ -81,7 +83,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                         Color32::from_rgb(120, 120, 140)
                     };
 
-                    draw_dots(ui, handle_rect, handle_color);
+                    draw_drag_dots(ui, handle_rect, handle_color);
 
                     ui.painter().vline(
                         handle_rect.right(),
@@ -217,7 +219,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
     }
 }
 
-pub fn draw_dots(ui: &mut egui::Ui, handle_rect: Rect, handle_color: Color32) {
+pub fn draw_drag_dots(ui: &mut egui::Ui, handle_rect: Rect, handle_color: Color32) {
     // Draw 3x3 grid of dots (braille pattern)
     let center = handle_rect.center();
     let dot_radius = 1.25;

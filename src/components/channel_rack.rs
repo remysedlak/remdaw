@@ -103,13 +103,24 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                                 button.fill(egui::Color32::from_rgb(90, 90, 90))
                             };
 
-                            if ui.add(button).clicked() {
-                                state.pattern[instrument][step] = !is_active;
+                            let response = ui.add(button);
 
+                            if response.clicked() {
+                                state.pattern[instrument][step] = true;
                                 if let Some(current_idx) = state.current_pattern_index {
                                     state.patterns[current_idx].data = state.pattern.clone();
                                 }
                             }
+                            if response.secondary_clicked(){
+                                state.pattern[instrument][step] = false;
+                                if let Some(current_idx) = state.current_pattern_index {
+                                    state.patterns[current_idx].data = state.pattern.clone();
+                                }
+                            }
+
+
+
+
                         }
                     });
                 }

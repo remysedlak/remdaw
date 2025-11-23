@@ -112,7 +112,7 @@ pub fn draw_clips(
 
         let clip_id = ui.id().with(("clip", i));
         let response = ui.interact(clip_rect, clip_id, Sense::click_and_drag());
-
+        
         // Context menu - this should work!
         response.context_menu(|ui| {
             if ui.button("Delete").clicked() {
