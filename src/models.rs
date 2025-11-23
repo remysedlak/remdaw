@@ -6,6 +6,38 @@ use crate::audio;
 use crate::audio::path_to_vector;
 use crate::config::AppConfig;
 
+#[derive(Debug, Clone)]
+pub enum ClipAction {
+    Delete(usize),
+    Duplicate(usize),
+
+    ChangeColor {
+        clip_index: usize,
+        new_color: Color32,
+    },
+
+    Rename {
+        clip_index: usize,
+        new_name: String,
+    },
+
+    // For dragging clips around
+    StartDrag(usize),
+    DragTo {
+        clip_index: usize,
+        new_track: usize,
+        new_start_beat: usize,
+    },
+
+    // For resizing
+    Resize {
+        clip_index: usize,
+        new_length: usize,
+    },
+}
+
+
+
 
 #[derive(Clone)]
 pub enum ResizeEdge {
@@ -91,6 +123,7 @@ pub struct UiState {
     pub rename_buffer: String, // Store the temporary name
     pub is_pattern_delete: bool,
     pub is_patterns_open: bool,
+    pub is_playlist_open: bool,
 }
 
 // shared state between gui and cpal
@@ -167,6 +200,7 @@ impl AudioState {
 impl Default for MyApp {
     fn default() -> Self {
         let ui_state = UiState {
+            is_playlist_open: true,
             snap_to_grid: false,
             snap_division: 1.0, // 1.0 = bar, 0.25 = beat, 0.0625 = 16th note)
             is_channel_rack_open: false,

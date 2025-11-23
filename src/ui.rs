@@ -29,8 +29,6 @@ impl eframe::App for MyApp {
 
         toolbar::render(self, ctx); //topbar
 
-        playlist::render(self, ctx); //main
-
         // conditionally render popups
         if self.ui_state.is_channel_rack_open {
             channel_rack::render(self, ctx);
@@ -54,6 +52,10 @@ impl eframe::App for MyApp {
         if self.ui_state.is_settings_open {
             settings::render(self, ctx);
         }
+        if self.ui_state.is_playlist_open {
+            playlist::render(self, ctx); //main
+        }
+
     }
 
     // runs on app close. save user config to storage

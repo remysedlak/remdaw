@@ -2,7 +2,7 @@
 
 use eframe::epaint::{Color32, Stroke, Rect, Pos2, FontId, Vec2};
 use egui::{Align2, Painter, Sense, Ui};
-use crate::models::{Playlist};
+use crate::models::{ClipAction, Playlist};
 use super::config::PlaylistConfig;
 
 pub fn draw_timeline_header(
@@ -79,14 +79,6 @@ pub fn draw_tracks(
             if idx % 2 == 0 { config.track_even_bg } else { config.track_odd_bg }
         );
 
-        // Mute button
-        painter.circle(
-            Pos2::new(rect.left() + 15.0, y + config.track_height / 2.0),
-            10.0,
-            config.mute_button_color,
-            Stroke::new(1.0, config.mute_button_outline)
-        );
-
         painter.text(
             Pos2::new(rect.left() + 30.0, y + config.track_height / 2.0),
             Align2::LEFT_CENTER,
@@ -103,11 +95,10 @@ pub fn draw_clips(
     playlist: &Playlist,
     config: &PlaylistConfig,
     ui: &mut Ui,
-) -> Option<usize> {  // Return which clip to delete
+) -> Option<ClipAction> {
     let timeline_start_x = rect.left() + config.track_label_width;
     let tracks_start_y = rect.top() + config.timeline_header_height;
-
-    let mut clip_to_delete = None;
+    let mut action = None;
 
     for (i, clip) in playlist.clips.iter().enumerate() {
         let y = tracks_start_y + clip.track_index as f32 * config.track_height;
@@ -122,9 +113,21 @@ pub fn draw_clips(
         let clip_id = ui.id().with(("clip", i));
         let response = ui.interact(clip_rect, clip_id, Sense::click_and_drag());
 
-        if response.secondary_clicked() {
-            clip_to_delete = Some(i);
-        }
+        // Context menu - this should work!
+        response.context_menu(|ui| {
+            if ui.button("Delete").clicked() {
+                action = Some(ClipAction::Delete(i));
+                ui.close();
+            }
+            if ui.button("Duplicate").clicked() {
+                action = Some(ClipAction::Duplicate(i));
+                ui.close();
+            }
+            if ui.button("Change Color").clicked() {
+                // Handle color change
+                ui.close();
+            }
+        });
 
         let clip_color = if response.hovered() {
             clip.color.linear_multiply(1.2)
@@ -143,7 +146,7 @@ pub fn draw_clips(
         );
     }
 
-    clip_to_delete
+    action
 }
 
 pub fn draw_playhead(
