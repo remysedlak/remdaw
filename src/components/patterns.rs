@@ -59,6 +59,13 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                         dragging_info = Some((idx, pattern.name.clone()));
                     }
 
+                    // Change cursor based on state
+                    if handle_response.dragged() {
+                        ctx.set_cursor_icon(egui::CursorIcon::Grabbing);
+                    } else if handle_response.hovered() {
+                        ctx.set_cursor_icon(egui::CursorIcon::Grab);
+                    }
+
                     // Draw background
                     let bg_color = if name_response.hovered() {
                         Color32::from_rgb(70, 70, 90)
@@ -73,24 +80,9 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                     } else {
                         Color32::from_rgb(120, 120, 140)
                     };
-                    // Draw 3x3 grid of dots (braille pattern)
-                    let center = handle_rect.center();
-                    let dot_radius = 1.5;
-                    let spacing_x = 3.5;
-                    let spacing_y = 3.5;
 
-                    // Calculate starting position (top-left dot)
-                    let start_x = center.x - spacing_x;
-                    let start_y = center.y - spacing_y;
+                    draw_dots(ui, handle_rect, handle_color);
 
-                    // Draw 3x3 grid
-                    for row in 0..3 {
-                        for col in 0..3 {
-                            let x = start_x + col as f32 * spacing_x;
-                            let y = start_y + row as f32 * spacing_y;
-                            ui.painter().circle_filled(Pos2::new(x, y), dot_radius, handle_color);
-                        }
-                    }
                     ui.painter().vline(
                         handle_rect.right(),
                         full_rect.y_range(),
@@ -108,17 +100,17 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                     name_response.context_menu(|ui| {
                         if ui.button("Delete").clicked() {
                             app.audio_state.lock().unwrap().patterns.remove(idx);
-                            ui.close_menu();
+                            ui.close();
                         }
                         if ui.button("Rename").clicked() {
                             app.ui_state.pattern_rename_popup = Some(idx);
                             app.ui_state.rename_buffer = pattern.name.clone();
-                            ui.close_menu();
+                            ui.close();
                         }
                         if ui.button("Duplicate").clicked() {
                             let mut state = app.audio_state.lock().unwrap();
                             state.patterns.push(pattern.clone());
-                            ui.close_menu();
+                            ui.close();
                         }
                     });
 
@@ -221,6 +213,27 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                 state.pattern = pattern.data.clone();
                 state.current_pattern_index = Some(idx);
             }
+        }
+    }
+}
+
+pub fn draw_dots(ui: &mut egui::Ui, handle_rect: Rect, handle_color: Color32) {
+    // Draw 3x3 grid of dots (braille pattern)
+    let center = handle_rect.center();
+    let dot_radius = 1.25;
+    let spacing_x = 3.5;
+    let spacing_y = 5.5;
+
+    // Calculate starting position (top-left dot)
+    let start_x = center.x - spacing_x;
+    let start_y = center.y - spacing_y;
+
+    // Draw 3x3 grid
+    for row in 0..3 {
+        for col in 0..3 {
+            let x = start_x + col as f32 * spacing_x;
+            let y = start_y + row as f32 * spacing_y;
+            ui.painter().circle_filled(Pos2::new(x, y), dot_radius, handle_color);
         }
     }
 }

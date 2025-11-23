@@ -4,7 +4,8 @@ use cpal::{Stream};
 use egui::Color32;
 use crate::audio;
 use crate::audio::path_to_vector;
-use crate::config::AppConfig;
+use crate::user_config::app_config::AppConfig;
+use crate::user_config::Theme;
 
 #[derive(Debug, Clone)]
 pub enum ClipAction {
@@ -108,6 +109,7 @@ pub struct MyApp {
     pub selected_file: Option<PathBuf>,
     pub config: AppConfig,
     pub ui_state: UiState,
+    pub theme: Theme,
 }
 
 pub struct UiState {
@@ -197,7 +199,22 @@ impl AudioState {
     }
 }
 
+impl MyApp {
+    pub fn apply_theme(&self, ctx: &egui::Context) {
+        let mut style = (*ctx.style()).clone();
+
+        // Apply your custom theme
+        style.visuals.window_fill = self.theme.panel_bg;
+        style.visuals.panel_fill = self.theme.bg_primary;
+        style.visuals.extreme_bg_color = self.theme.bg_secondary;
+        style.visuals.faint_bg_color = self.theme.bg_tertiary;
+
+        ctx.set_style(style);
+    }
+}
 impl Default for MyApp {
+
+
     fn default() -> Self {
         let ui_state = UiState {
             is_playlist_open: true,
@@ -219,6 +236,7 @@ impl Default for MyApp {
             ui_state,
             config: AppConfig::load(),
             selected_file: None,
+            theme: Theme::fl_studio(),
         }
     }
 }

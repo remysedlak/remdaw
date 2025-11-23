@@ -2,9 +2,13 @@ use crate::models::{MyApp};
 use crate::components::{channel_rack, file_explorer, file_information, patterns, playlist, settings, toolbar};
 use crate::components::popups::rename_pattern;
 
-impl eframe::App for MyApp {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
 
+
+impl eframe::App for MyApp {
+
+
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        self.apply_theme(ctx);
         // test hotkeys here
         ctx.input_mut(|i| {
             if i.consume_key(egui::Modifiers::NONE, egui::Key::T) {

@@ -22,11 +22,11 @@ impl AppConfig {
     // gets the config path for each platform
     fn get_config_path() -> PathBuf {
         let config_dir = if cfg!(target_os = "windows") {
-            dirs::config_dir().unwrap_or_else(|| PathBuf::from("."))
+            dirs::config_dir().unwrap_or_else(|| PathBuf::from("../.."))
         } else if cfg!(target_os = "macos") {
-            dirs::config_dir().unwrap_or_else(|| PathBuf::from("."))
+            dirs::config_dir().unwrap_or_else(|| PathBuf::from("../.."))
         } else {
-            dirs::config_dir().unwrap_or_else(|| PathBuf::from("."))
+            dirs::config_dir().unwrap_or_else(|| PathBuf::from("../.."))
         };
 
         config_dir.join("remdaw")

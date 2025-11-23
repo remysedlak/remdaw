@@ -2,8 +2,8 @@ mod ui;
 mod audio;
 mod models;
 mod components;
-mod config;
 mod utils;
+mod user_config;
 
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
