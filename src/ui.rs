@@ -27,27 +27,23 @@ impl eframe::App for MyApp {
             }
         });
 
+        toolbar::render(self, ctx); //topbar
+
+        playlist::render(self, ctx); //main
+
         // conditionally render popups
         if self.ui_state.is_channel_rack_open {
             channel_rack::render(self, ctx);
         }
-
         if self.ui_state.is_file_info_open {
             let file_path = self.selected_file.clone();
             if let Some(ref path) = file_path {
                 file_information::render(self, ctx, path);
             }
         }
-
-
-        // PATTERN rename window
-        if let Some(idx) = self.ui_state.pattern_rename_popup {
+        if let Some(idx) = self.ui_state.pattern_rename_popup { // PATTERN rename window
             rename_pattern::render(self, ctx, idx);
         }
-
-        // render toolbar at top
-        toolbar::render(self, ctx);
-
         // conditionally render side panels
         if self.ui_state.is_files_explorer_open {
             file_explorer::render(self, ctx);
@@ -58,9 +54,6 @@ impl eframe::App for MyApp {
         if self.ui_state.is_settings_open {
             settings::render(self, ctx);
         }
-
-        // where the playlist will be modularized
-        playlist::render(self, ctx);
     }
 
     // runs on app close. save user config to storage

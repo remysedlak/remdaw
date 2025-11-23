@@ -17,7 +17,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
 
     ctx.request_repaint();
 
-    egui::CentralPanel::default().show(ctx, |ui| {
+    egui::CentralPanel::default().show(ctx, |ui| {  // Remove &mut here
         // Title bar
         ui.horizontal(|ui| {
             ui.label(egui::RichText::new("Playlist").strong().size(20.0));
@@ -45,9 +45,15 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
         drawing::draw_timeline_header(&painter, rect, &config);
         drawing::draw_beat_markers(&painter, rect, &config, 40);
         drawing::draw_tracks(&painter, rect, &state.playlist, &config);
-        drawing::draw_clips(&painter, rect, &state.playlist, &config);
         drawing::draw_playhead(&painter, rect, state.playhead_position, &config);
+        let clip_to_delete = drawing::draw_clips(&painter, rect, &state.playlist, &config, ui);
 
         drop(state);
+
+        // Handle deletion after dropping the lock
+        if let Some(clip_index) = clip_to_delete {
+            let mut state = app.audio_state.lock().unwrap();
+            state.playlist.clips.remove(clip_index);
+        }
     });
 }

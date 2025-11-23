@@ -1,7 +1,7 @@
 // src/components/playlist/drawing.rs
 
 use eframe::epaint::{Color32, Stroke, Rect, Pos2, FontId, Vec2};
-use egui::{Align2, Painter};
+use egui::{Align2, Painter, Sense, Ui};
 use crate::models::{Playlist};
 use super::config::PlaylistConfig;
 
@@ -96,17 +96,20 @@ pub fn draw_tracks(
         );
     }
 }
-
+// Modify the function signature to return Option<usize>
 pub fn draw_clips(
     painter: &Painter,
     rect: Rect,
     playlist: &Playlist,
     config: &PlaylistConfig,
-) {
+    ui: &mut Ui,
+) -> Option<usize> {  // Return which clip to delete
     let timeline_start_x = rect.left() + config.track_label_width;
     let tracks_start_y = rect.top() + config.timeline_header_height;
 
-    for clip in &playlist.clips {
+    let mut clip_to_delete = None;
+
+    for (i, clip) in playlist.clips.iter().enumerate() {
         let y = tracks_start_y + clip.track_index as f32 * config.track_height;
         let x = timeline_start_x + (clip.start_time as f32 * config.pixels_per_beat);
         let width = clip.length as f32 * config.pixels_per_beat;
@@ -116,7 +119,20 @@ pub fn draw_clips(
             Vec2::new(width, config.track_height - config.clip_vertical_padding * 2.0)
         );
 
-        painter.rect_filled(clip_rect, config.clip_corner_radius, clip.color);
+        let clip_id = ui.id().with(("clip", i));
+        let response = ui.interact(clip_rect, clip_id, Sense::click_and_drag());
+
+        if response.secondary_clicked() {
+            clip_to_delete = Some(i);
+        }
+
+        let clip_color = if response.hovered() {
+            clip.color.linear_multiply(1.2)
+        } else {
+            clip.color
+        };
+
+        painter.rect_filled(clip_rect, config.clip_corner_radius, clip_color);
 
         painter.text(
             Pos2::new(x + 5.0, y + config.track_height / 2.0),
@@ -126,6 +142,8 @@ pub fn draw_clips(
             config.clip_text_color
         );
     }
+
+    clip_to_delete
 }
 
 pub fn draw_playhead(
