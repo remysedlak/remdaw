@@ -147,10 +147,32 @@ pub struct AudioState {
     pub just_started: bool,
     pub playlist: Playlist,
     pub playhead_position: f64,
+    pub playhead_samples: u64,      // Total samples played
+    pub playhead_time_seconds: f64, // Current time in seconds
     pub patterns: Vec<Pattern>,
 }
 
 impl AudioState {
+
+    pub fn update_playhead(&mut self, samples_processed: usize) {
+        self.playhead_samples += samples_processed as u64;
+        self.playhead_time_seconds = self.playhead_samples as f64 / self.sampling_rate as f64;
+        self.playhead_position = self.playhead_time_seconds * (self.bpm as f64 / 60.0);
+    }
+
+    pub fn get_playhead_time_display(&self) -> String {
+        let total_seconds = self.playhead_time_seconds;
+        let minutes = (total_seconds / 60.0).floor() as i32;
+        let seconds = (total_seconds % 60.0).floor() as i32;
+        let millis = ((total_seconds % 1.0) * 1000.0) as i32;
+        format!("{:02}:{:02}.{:03}", minutes, seconds, millis)
+    }
+
+    pub fn reset_playhead(&mut self) {
+        self.playhead_samples = 0;
+        self.playhead_time_seconds = 0.0;
+        self.playhead_position = 0.0;
+    }
     pub fn new(sampling_rate: f32) -> Self {
         let mut instruments = Vec::new();
         let paths = ["test_instruments/cowbell.wav", "test_instruments/Clap Dance.wav", "test_instruments/St 808.wav"];
@@ -194,6 +216,8 @@ impl AudioState {
             preview_sound: None,
             playlist: Playlist::new(),
             playhead_position: 0.0,
+            playhead_time_seconds: 0.0,
+            playhead_samples: 0,
             patterns
         }
     }

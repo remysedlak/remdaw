@@ -8,3 +8,4 @@ pub mod playlist;
 pub mod popups;
 pub mod snap_to_grid;
 mod draggable_button;
+mod timer;

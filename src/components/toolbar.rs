@@ -1,5 +1,6 @@
 use crate::models::MyApp;
 use eframe::emath::Align::Center;
+use eframe::glow::RED;
 
 pub fn render(app: &mut MyApp, ctx: &egui::Context) {
     egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
@@ -69,8 +70,11 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                 app.ui_state.is_patterns_open = !app.ui_state.is_patterns_open
             }
 
+            ui.label(egui::RichText::new(app.audio_state.lock().unwrap().get_playhead_time_display().to_string()).color(egui::Color32::RED).size(30.0));
+
+            //settings
             ui.with_layout(egui::Layout::right_to_left(Center), |ui| {
-                if ui.button("settings").clicked() {
+                if ui.button("\u{2699}").on_hover_text("Settings").clicked() {
                     app.ui_state.is_settings_open = !app.ui_state.is_settings_open;
                 }
             });

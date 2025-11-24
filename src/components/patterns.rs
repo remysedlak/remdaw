@@ -59,17 +59,17 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                     button.name_response.context_menu(|ui| {
                         if ui.button("Delete").clicked() {
                             app.audio_state.lock().unwrap().patterns.remove(idx);
-                            ui.close_menu();
+                            ui.close();
                         }
                         if ui.button("Rename").clicked() {
                             app.ui_state.pattern_rename_popup = Some(idx);
                             app.ui_state.rename_buffer = pattern.name.clone();
-                            ui.close_menu();
+                            ui.close();
                         }
                         if ui.button("Duplicate").clicked() {
                             let mut state = app.audio_state.lock().unwrap();
                             state.patterns.push(pattern.clone());
-                            ui.close_menu();
+                            ui.close();
                         }
                     });
 

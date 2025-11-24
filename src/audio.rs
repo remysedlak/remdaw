@@ -188,11 +188,9 @@ fn play_instrument(data: &mut [f32], state: &Arc<Mutex<AudioState>>) {
             }
 
             // Handle metronome click on beat boundaries
-            // Handle metronome click on beat boundaries
-            // Handle metronome click on beat boundaries
             if state.is_metronome {
-                let beat = state.playhead_position.floor() as i32;  // Change to i32
-                let last_beat = (state.playhead_position - 1.0 / samples_per_beat as f64).floor() as i32;  // Change to i32
+                let beat = state.playhead_position.floor() as i32;
+                let last_beat = (state.playhead_position - 1.0 / samples_per_beat as f64).floor() as i32;
 
                 // Trigger metronome when crossing a beat boundary
                 if beat != last_beat {
@@ -207,8 +205,12 @@ fn play_instrument(data: &mut [f32], state: &Arc<Mutex<AudioState>>) {
             }
 
             // Advance the playhead
-            state.metronome_counter += 1.0; // Increment sample counter
-            state.playhead_position = (state.metronome_counter / samples_per_beat) as f64; // Convert to beats
+            state.metronome_counter += 1.0;
+            state.playhead_position = (state.metronome_counter / samples_per_beat) as f64;
+
+            // Track total samples and time
+            state.playhead_samples += 1;
+            state.playhead_time_seconds = state.playhead_samples as f64 / state.sampling_rate as f64;
         }
 
         // Mix all active audio sources together

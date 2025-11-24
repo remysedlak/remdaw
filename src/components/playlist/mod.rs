@@ -6,16 +6,10 @@ mod drag_drop;
 mod resize;
 
 use std::path::PathBuf;
-use eframe::emath::Align::Center;
 use egui::Id;
 use crate::models::MyApp;
-use crate::components::snap_to_grid;
 
 pub use config::PlaylistConfig;
-
-// src/components/playlist/mod.rs
-
-// src/components/playlist/mod.rs
 
 pub fn render(app: &mut MyApp, ctx: &egui::Context) {
     let config = PlaylistConfig::default();
@@ -41,7 +35,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                 // Check for PATTERN drops
                 // Check for pattern drops
                 for idx in 0..100 {
-                    let handle_id = egui::Id::new(("pattern", idx)).with("_handle");  // Added .with("_handle")
+                    let handle_id = Id::new(("pattern", idx)).with("_handle");  // Added .with("_handle")
                     if let Some(pattern_idx) = ctx.memory(|mem| {
                         mem.data.get_temp::<usize>(handle_id.with("_egui_dnd_drag_payload"))
                     }) {
