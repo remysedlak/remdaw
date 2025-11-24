@@ -39,8 +39,9 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
         if let Some(pointer_pos) = ctx.pointer_interact_pos() {
             if ctx.input(|i| i.pointer.any_released()) {
                 // Check for PATTERN drops
+                // Check for pattern drops
                 for idx in 0..100 {
-                    let handle_id = egui::Id::new(("pattern_drag_handle", idx));
+                    let handle_id = egui::Id::new(("pattern", idx)).with("_handle");  // Added .with("_handle")
                     if let Some(pattern_idx) = ctx.memory(|mem| {
                         mem.data.get_temp::<usize>(handle_id.with("_egui_dnd_drag_payload"))
                     }) {

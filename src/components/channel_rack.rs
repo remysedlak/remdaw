@@ -1,6 +1,5 @@
 use std::sync::Arc;
 use eframe::emath::vec2;
-use eframe::epaint::Color32;
 use egui::{Frame, Id};
 use crate::audio::path_to_vector;
 use crate::models::{Instrument, MyApp};
@@ -17,7 +16,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
             let current_step = state.current_step;
 
             let frame = Frame::default()
-                .fill(Color32::from_rgb(20, 20, 20))
+                .fill(egui::Color32::from_rgb(20, 20, 20))
                 .inner_margin(8.0);
 
             let mut from_idx = None;
@@ -60,12 +59,12 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                         });
 
                         // Detect hover for reordering
-                        if let (Some(pointer), Some(hovered_payload)) = (
+                        if let (Some(pointer), Some(_hovered_payload)) = (
                             ui.input(|i| i.pointer.interact_pos()),
                             response.dnd_hover_payload::<usize>(),
                         ) {
                             let rect = response.rect;
-                            let stroke = egui::Stroke::new(2.0, Color32::YELLOW);
+                            let stroke = egui::Stroke::new(2.0, egui::Color32::from_rgb(70,70,70));
 
                             let insert_idx = if pointer.y < rect.center().y {
                                 ui.painter().hline(rect.x_range(), rect.top(), stroke);
@@ -82,7 +81,6 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                         }
 
                         // Step buttons...
-                        // Step buttons (you had "// ... rest of step button code" - here's the actual code)
                         for step in 0..16 {
                             let is_active = state.pattern[instrument][step];
                             let is_current = step == current_step && state.is_playing;
@@ -117,11 +115,8 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                                     state.patterns[current_idx].data = state.pattern.clone();
                                 }
                             }
-
-
-
-
                         }
+
                     });
                 }
 
