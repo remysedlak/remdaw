@@ -3,7 +3,7 @@ use eframe::emath::Align::Center;
 
 pub fn render(app: &mut MyApp, ctx: &egui::Context) {
     egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-        ui.add_space(12.0);
+        ui.add_space(2.0);
 
         ui.horizontal(|ui| {
             let mut state = app.audio_state.lock().unwrap();
@@ -28,6 +28,11 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
 
             ui.add_space(24.0);
 
+
+            crate::components::timer::render(ui, &state); // shows time in seconds
+
+            ui.add_space(4.0);
+
             let label = if state.is_playing { "\u{23F8}" } else { "\u{25B6}" }; // pause else play
             if ui.add_sized([25.0, 20.0], egui::Button::new(label)).clicked() {
                 if !state.is_playing {
@@ -47,6 +52,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                 state.is_playing = false;
                 state.playhead_position = 0.0;
                 state.metronome_counter = 0.0;
+                state.reset_playhead();
             }
 
             if ui.button("metro").clicked() {
@@ -70,8 +76,6 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
             }
 
 
-            crate::components::timer::render(ui, ctx, app);
-
             //settings
             ui.with_layout(egui::Layout::right_to_left(Center), |ui| {
                 if ui.button("\u{2699}").on_hover_text("Settings").clicked() {
@@ -79,7 +83,7 @@ pub fn render(app: &mut MyApp, ctx: &egui::Context) {
                 }
             });
         });
-        ui.add_space(12.0);
+        ui.add_space(2.0);
     });
 
 }
