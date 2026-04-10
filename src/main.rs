@@ -29,7 +29,7 @@ fn main() {
     let mut i: f32 = 0.0;
     let callback = move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
         for sample in data.iter_mut() {
-            *sample = (2.0 * std::f32::consts::PI * 220.0 * i / 48_000.0).sin();
+            *sample = (2.0 * std::f32::consts::PI * 220.0 * i / config.sample_rate).sin();
             i += 1.0;
         }
     };
